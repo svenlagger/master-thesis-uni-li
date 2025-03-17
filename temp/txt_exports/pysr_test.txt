@@ -1,0 +1,212 @@
+# %%
+import numpy as np
+import pandas as pd
+from pysr import PySRRegressor
+
+# Generate example data
+# Let's say C influences B, and B influences A:
+np.random.seed(42)
+C = np.random.uniform(-10, 10, 1000)  # Random data for C
+B = 2 * C + np.random.normal(0, 1, 1000)  # B depends on C with some noise
+A = 3 * B**2 - 5 * C + np.random.normal(0, 2, 1000)  # A depends on B and C with noise
+
+# Create a DataFrame
+data = pd.DataFrame({'C': C, 'B': B, 'A': A})
+
+# Separate features (C, B) and target (A)
+X = data[['B', 'C']].to_numpy()  # Features: B and C
+y = data['A'].to_numpy()  # Target: A
+
+# Use PySR to find the symbolic relationship
+model = PySRRegressor(
+    niterations=40,  # Number of iterations to search for equations
+    binary_operators=["+", "-", "*", "/"],
+    unary_operators=["sin", "cos", "exp", "log", "abs", "sqrt"],
+    elementwise_loss="loss(x, y) = (x - y)^2",  # Define loss function (mean squared error)
+    verbosity=1,
+)
+
+# Fit the model
+model.fit(X, y)
+
+
+# %%
+# Display the best equations found
+print(model)
+
+# %%
+from sympy import symbols, simplify, sin, cos, log, Abs, exp, expand_power_base, Mul, Rational, sqrt
+import numpy as np
+import pandas as pd
+
+# Define variables
+x0, x1, x2 = symbols('x0 x1 x2')
+
+# Define the expression
+expr = (((x0 * 0.013395232) + sin(x1 * (x2 * 0.011614522))) * 12.717946) + 4.773303
+
+# Simplify the expression
+simplified_expr = simplify(expr)
+
+print("Simplified Expression:", simplified_expr)
+
+# %%
+# Define symbols
+x0, x1, x2 = symbols('x0 x1 x2')
+
+# Define and simplify the expression
+expr = simplify((((x0 * 0.013395232) + sin(x1 * (x2 * 0.011614522))) * 12.717946) + 4.773303)
+
+lst = []
+
+# Function to print the tree structure
+def traverse_expr_tree(node, level=0):
+    print("  " * level + f"Node: {node}")
+    for child in node.args:
+        traverse_expr_tree(child, level + 1)
+        lst.append(child)
+
+# Traverse and print the tree structure
+traverse_expr_tree(expr)
+print(lst)
+
+# %%
+import json
+from sympy import symbols, simplify
+
+# Define a function to recursively convert the expression tree
+def expression_to_json(expr):
+    # Base case: If the expression is a symbol (variable)
+    if expr.is_Symbol:
+        return f"$self.{expr}"
+
+    # Base case: If the expression is a number (constant)
+    if expr.is_Number:
+        return str(expr)
+
+    # If the expression is an addition
+    if expr.is_Add:
+        args = list(expr.args)
+        arg_num = 1
+        result = {}
+        for arg in args:
+            result[f'term{arg_num}'] = expression_to_json(arg)
+            arg_num += 1
+        result['type'] = 'ADDITIONDOUBLE'
+        return result
+
+    # If the expression is a multiplication
+    if expr.is_Mul:
+        args = list(expr.args)
+        arg_num = 1
+        result = {}
+        for arg in args:
+            result[f'term{arg_num}'] = expression_to_json(arg)
+            arg_num += 1
+        result['type'] = 'MULTIPLICATIONDOUBLE'
+        return result
+
+    # If the expression is a power
+    if expr.is_Pow:
+        if expr.exp == Rational(1, 2):
+            args = list(expr.args)
+            return {
+                "term1": expression_to_json(args[0]),
+                "type": "SQUAREROOT"
+            }
+        else:
+            base, exponent = expr.as_base_exp()
+            return {
+                "term1": expression_to_json(base),
+                "term2": expression_to_json(exponent),
+                "type": "POWER"
+            }
+    
+    if isinstance(expr, sin):
+        args = list(expr.args)
+        return {
+                "term1": expression_to_json(args[0]),
+                "type": "SINE"
+            }
+        
+    if isinstance(expr, cos):
+        args = list(expr.args)
+        return {
+                "term1": expression_to_json(args[0]),
+                "type": "COSINE"
+            }
+    
+    if isinstance(expr, exp):
+        args = list(expr.args)
+        return {
+                "term1": expression_to_json(args[0]),
+                "type": "EXPONENT"
+            }
+    
+    if isinstance(expr, log):
+        args = list(expr.args)
+        return {
+                "term1": expression_to_json(args[0]),
+                "type": "LOGARITHM"
+            }
+    
+    if isinstance(expr, Abs):
+        args = list(expr.args)
+        return {
+                "term1": expression_to_json(args[0]),
+                "type": "ABSOLUTEVALUE"
+            }
+    
+    # If none of the above cases apply, return the string representation
+    return str(expr)
+
+# Define symbols for the example
+x0, x1, x2 = symbols('x0 x1 x2')
+
+# Example expression
+expr = simplify(exp(sin(sqrt((x1 + x2) + ((x0 * 0.22069037) - -28.435165)))) * 8.929338)
+print(expr)
+
+# Convert the expression to JSON-like format
+json_representation = expression_to_json(expr)
+
+# Print the result as a JSON string
+print(json.dumps(json_representation, indent=4))
+
+
+# %%
+# Define symbols
+x0, x1 = symbols('x0 x1')
+
+# Define the expression
+expr = 3.0004373 * x0**3 - 4.9765296 * x1
+
+# Function to expand powers explicitly
+def expand_powers_as_multiplication(expr):
+    if expr.is_Pow:  # If the node is a power
+        # Expand x**n into x*x*...*x
+        return Mul(*[expr.base] * expr.exp, evaluate=False)
+    elif expr.args:  # Recursively expand for other composite nodes
+        return expr.func(*[expand_powers_as_multiplication(arg) for arg in expr.args], evaluate=False)
+    else:
+        return expr  # Return the node as-is for constants or symbols
+
+# Expand the expression
+expanded_expr = expand_powers_as_multiplication(expr)
+
+# Function to traverse and print the tree structure
+def traverse_expr_tree(node, level=0):
+    print("  " * level + f"Node: {node}")
+    for child in node.args:  # Recursively traverse the arguments
+        traverse_expr_tree(child, level + 1)
+
+# Traverse and print the tree structure
+traverse_expr_tree(expanded_expr)
+
+# %%
+print(data)
+
+# %%
+print(data[['B', 'C']])
+
+

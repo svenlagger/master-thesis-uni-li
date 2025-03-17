@@ -1,0 +1,111 @@
+# %%
+import pandas as pd
+import numpy as np
+import copy
+import json
+from ydata_profiling import ProfileReport
+
+# %%
+df = pd.read_csv('data/credit_score/credit_score_test.csv')
+
+# %%
+df.info()
+
+# %%
+# Checking the data types
+print(df.dtypes)
+
+# Checking for missing values
+print(df.isnull().sum())
+
+# %%
+# List of columns that should be numeric
+convert_cols = ["Age", "Annual_Income", "Outstanding_Debt", "Amount_invested_monthly", "Monthly_Balance", "Num_of_Loan", "Num_of_Delayed_Payment"]
+
+# Convert to numeric and force errors to NaN
+for col in convert_cols:
+    df[col] = pd.to_numeric(df[col], errors="coerce")
+
+
+# %%
+df.head()
+
+# %%
+def convert_credit_history(value):
+    if isinstance(value, str):
+        years = int(value.split(" Years")[0]) if "Years" in value else 0
+        months = int(value.split(" and ")[-1].split(" Months")[0]) if "Months" in value else 0
+        return years + months / 12  # Convert months to decimal
+    return None
+
+df["Credit_History_Age"] = df["Credit_History_Age"].apply(convert_credit_history)
+
+
+# %%
+categorical_cols = ["Occupation", "Credit_Mix", "Payment_of_Min_Amount", "Payment_Behaviour"]
+
+for col in categorical_cols:
+    df[col] = df[col].astype("category")
+
+# %%
+df.loc[df["Age"] < 0, "Age"] = df["Age"].median()  # Replace negative ages with median
+df.loc[df["Age"] > 100, "Age"] = df["Age"].median()  # Replace unrealistic ages
+
+df.loc[df["Num_Bank_Accounts"] < 0, "Num_Bank_Accounts"] = df["Num_Bank_Accounts"].median()  # Replace negative bank accounts with median
+df.loc[df["Num_Bank_Accounts"] > 50, "Num_Bank_Accounts"] = df["Num_Bank_Accounts"].median()  # Replace unrealistically high number of bank accounts with median
+
+df.loc[df["Num_of_Loan"] < 0, "Num_of_Loan"] = df["Num_of_Loan"].median()  # Replace negative num of loan with median
+df.loc[df["Num_of_Loan"] > 12, "Num_of_Loan"] = df["Num_of_Loan"].median()  # Replace unrealistic num of loan
+
+df.loc[df["Num_of_Delayed_Payment"] < 0, "Num_of_Delayed_Payment"] = df["Num_of_Delayed_Payment"].median()  # Replace negative num of delayed payments with median
+df.loc[df["Num_of_Delayed_Payment"] > 80, "Num_of_Delayed_Payment"] = df["Num_of_Delayed_Payment"].median()  # Replace unrealistic num of delayed payments
+
+df.loc[df["Num_Credit_Card"] < 0, "Num_Credit_Card"] = df["Num_Credit_Card"].median()  # Replace negative num of credit cards with median
+df.loc[df["Num_Credit_Card"] > 80, "Num_Credit_Card"] = df["Num_Credit_Card"].median()  # Replace unrealistic num of credit cards
+
+df.loc[df["Interest_Rate"] < 0, "Interest_Rate"] = df["Interest_Rate"].median()  # Replace negative interest rates with median
+df.loc[df["Interest_Rate"] > 32, "Interest_Rate"] = df["Interest_Rate"].median()  # Replace unrealistic interest rates
+
+df.loc[df["Num_Credit_Inquiries"] < 0, "Num_Credit_Inquiries"] = df["Num_Credit_Inquiries"].median()  # Replace negative num of credit inquiries with median
+df.loc[df["Num_Credit_Inquiries"] > 200, "Num_Credit_Inquiries"] = df["Num_Credit_Inquiries"].median()  # Replace unrealistic num of credit inquiries
+
+df.loc[df["Total_EMI_per_month"] < 0, "Total_EMI_per_month"] = df["Total_EMI_per_month"].median()  # Replace negative total EMI per month with median
+df.loc[df["Total_EMI_per_month"] > 10000, "Total_EMI_per_month"] = df["Total_EMI_per_month"].median()  # Replace unrealistic total EMI per month
+
+# %%
+# List of columns that are numeric
+numeric_cols = ["Age", "Annual_Income", "Outstanding_Debt", "Amount_invested_monthly", "Monthly_Balance", "Num_of_Loan", "Num_of_Delayed_Payment", "Num_Bank_Accounts", "Num_Credit_Card", 
+                "Interest_Rate", "Num_Credit_Inquiries", "Total_EMI_per_month", "Monthly_Inhand_Salary", "Credit_History_Age"]
+
+# Impute missing values in numeric columns
+for col in numeric_cols:
+    df[col] = df[col].fillna(df[col].median())
+
+# %%
+df = df.dropna(subset=["Age"])  # drop rows with no age
+df = df[df["Occupation"] != "_______"]  # drop rows with not identifiable occupation
+
+# %%
+missing_data = df.isnull().sum()
+print(missing_data[missing_data > 0])  # Display only columns with missing values
+
+# %%
+# For categorical columns, use mode (most frequent value):
+df["Type_of_Loan"] = df["Type_of_Loan"].fillna(df["Type_of_Loan"].mode()[0])
+
+
+# %%
+# Generate the profiling report
+profile = ProfileReport(df, title="YData Profiling Report CREDIT CLEANED", explorative=True)
+
+# Display the report in the notebook
+# profile.to_notebook_iframe()
+
+# Alternatively, save the report to an HTML file
+profile.to_file('profiling/profiling_report_cleaned_credit_score.html')
+
+# %%
+# Once the transformations are complete, save the cleaned dataset:
+df.to_csv("data/credit_score/cleaned_credit_score.csv", index=False)
+
+

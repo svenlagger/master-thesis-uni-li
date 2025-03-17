@@ -1,0 +1,359 @@
+# %%
+# Step 2: Import necessary libraries
+import pandas as pd
+import numpy as np
+import copy
+import json
+from ydata_profiling import ProfileReport
+
+# %%
+# Step 3: Load your CSV file
+df = pd.read_csv('data/credit_score/credit_score_test.csv')  # Replace with your file path
+
+# %%
+from distfit import distfit
+import matplotlib.pyplot as plt
+
+cleaned = df['Monthly_Inhand_Salary'].dropna().values
+
+dfit = distfit()
+dfit.fit_transform(cleaned)
+
+# --- Output the Results ---
+# Print a summary of the fitting results.
+print("distfit Summary:")
+print(dfit.summary)
+
+# Plot the results to visually inspect the fit.
+# dfit.plot()
+# plt.show()
+
+# %%
+# # Assuming df is your pandas DataFrame.
+# # Get a list of all numeric columns.
+# numeric_cols = df.select_dtypes(include='number').columns
+
+# # Dictionary to store the summary results for each column.
+# results = {}
+
+# for col in numeric_cols:
+#     print(f"Processing column: {col}")
+    
+#     # Clean the data (drop missing values)
+#     data = df[col].dropna().values
+    
+#     # Fit the distributions using distfit
+#     dfit = distfit()
+#     dfit.fit_transform(data)
+    
+#     # Store the summary DataFrame in the results dictionary.
+#     results[col] = dfit.summary
+    
+#     # Print the summary for the current column.
+#     print(f"Distribution fitting summary for {col}:")
+#     print(dfit.summary)
+    
+#     # Optionally, plot the fit for visual inspection and save the plot.
+#     dfit.plot(title=f"Distribution Fit for {col}")
+#     plt.savefig(f"distfit_{col}.png")
+#     plt.close()
+
+# %%
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from distfit import distfit
+
+# Dictionary to store results for each numeric column
+fitted_results = {}
+
+# Get a list of numeric columns in your DataFrame
+numeric_cols = df.select_dtypes(include='number').columns
+
+# Define the subset of distributions to test.
+# (You can change this list as needed.)
+desired_dists = ['norm', 'lognorm', 'gamma']
+
+for col in numeric_cols:
+    print(f"Processing column: {col}")
+    
+    # Extract and clean the data for the current column
+    data = df[col].dropna().values
+    
+    # Initialize a distfit object, restricting to only the desired distributions.
+    # Setting verbose=0 will suppress the printed log.
+    dfit = distfit(distr=desired_dists, verbose=0)
+    
+    # Fit the distributions on the data.
+    dfit.fit_transform(data)
+    
+    # Retrieve the summary DataFrame that contains the fit results.
+    summary_df = dfit.summary
+    
+    if not summary_df.empty:
+        # Choose the best fit as the one with the lowest RSS (score)
+        best_dist = summary_df['score'].idxmin()
+        best_params = summary_df.loc[best_dist].to_dict()
+        
+        # Store the result for this column
+        fitted_results[col] = {
+            'best_distribution': best_dist,
+            'parameters': best_params
+        }
+    else:
+        fitted_results[col] = None
+
+# Print the summarized fitted distributions per numeric column
+print("\nFitted distributions per numeric column:")
+for col, result in fitted_results.items():
+    print(f"\nColumn: {col}")
+    if result is not None:
+        # print("  Best Distribution:", result['best_distribution'])
+        print("  Parameters:")
+        for param, value in result['parameters'].items():
+            print(f"    {param}: {value}")
+    else:
+        print("  No fit available.")
+
+
+# %%
+def distributions_to_profile(distr_report):
+
+    distr_profiles = []
+
+    for col, result in distr_report.items():
+
+        distr_elem = {
+            'name': str(col),
+            'type': 'num'
+        }
+
+        if result is not None:
+
+            col_details = copy.deepcopy(result['parameters'])
+
+            if col_details['name'] == 'norm':
+                distr_details = {
+                    'type': 'GAUSSIAN',
+                    'mean': col_details['params'][0],
+                    'deviation': col_details['params'][1]
+                }
+                distr_elem['wf.hr'] = distr_details
+            elif col_details['name'] == 'lognorm':
+                distr_details = {
+                    'type': 'LOGNORM',
+                    'mean': np.log(col_details['params'][2]),
+                    'deviation': col_details['params'][0] 
+                }
+                distr_elem['wf.hr'] = distr_details
+            elif col_details['name'] == 'gamma':
+                distr_details = {
+                    'type': 'GAMMA',
+                    'alpha': col_details['params'][0],
+                    'theta': col_details['params'][2] 
+                }
+                distr_elem['wf.hr'] = distr_details
+            else:
+                distr_elem['wf.hr'] = 'ERROR'
+        else:
+            distr_elem['message'] = 'ERROR'
+
+        distr_profiles.append(distr_elem)
+    
+    return distr_profiles
+
+# %%
+import json
+
+gen_profile = distributions_to_profile(fitted_results)
+
+print(json.dumps(gen_profile, indent=4))
+
+# %%
+# Step 4: Generate the profiling report
+profile = ProfileReport(df, title="YData Profiling Report", explorative=True)
+
+# Step 5: Display the report in the notebook
+profile.to_notebook_iframe()
+
+# Alternatively, save the report to an HTML file
+profile.to_file('profiling/profiling_report_credit_score_test.html')
+
+
+# %%
+from pysr import PySRRegressor
+
+# %%
+df_clean = df.dropna(subset=['Delay_from_due_date', 'Num_Bank_Accounts', 'Num_Credit_Inquiries', 'Interest_Rate'])
+df_clean = df_clean[df_clean['Interest_Rate'] <= 32]
+
+df_sample = df_clean.sample(n=9600, random_state=42)
+
+# %%
+X = df_sample[['Delay_from_due_date', 'Num_Bank_Accounts', 'Num_Credit_Inquiries']].to_numpy()  # Features: B and C
+y = df_sample['Interest_Rate'].to_numpy()  # Target: A
+
+# Use PySR to find the symbolic relationship
+model = PySRRegressor(
+    niterations=128,  # Number of iterations to search for equations
+    binary_operators=["+", "-", "*", "/"],
+    unary_operators=["sin", "cos", "exp", "log", "abs", "sqrt"],
+    elementwise_loss="loss(x, y) = (x - y)^2",  # Define loss function (mean squared error)
+    verbosity=1,
+)
+
+# Fit the model
+model.fit(X, y)
+
+# %%
+print(list(df_sample['Interest_Rate']))
+
+# %%
+# test evaluation
+# MSE Loss
+interest = np.sqrt(df_sample['Delay_from_due_date'] + 18.605) * (
+    1.9839 - np.sin(np.sqrt(df_sample['Num_Bank_Accounts'] + df_sample['Num_Credit_Inquiries']))
+)
+    
+print(interest)
+
+# %%
+print(df_sample['Interest_Rate'] - interest)
+
+import matplotlib.pyplot as plt
+
+# Compute the residuals
+residuals = df_sample['Interest_Rate'] - interest
+residuals = residuals.reset_index(drop=True)
+
+# Define your interval
+lower_bound = -1
+upper_bound = 1
+
+# Create a mask for points within the interval
+mask = (residuals >= lower_bound) & (residuals <= upper_bound)
+print(len(mask[mask == True]))
+
+# Plot the line plot for residuals
+# plt.figure(figsize=(10, 5))
+# plt.plot(residuals.index, residuals, label="Residuals", color="blue")
+
+# Plot a horizontal reference line at 0
+plt.axhline(0, color="red", linestyle="--", label="Zero Reference")
+
+# Overlay scatter for the highlighted points
+plt.scatter(residuals.index[mask], residuals[mask],
+            color="green", s=50, label=f"Residuals in [{lower_bound}, {upper_bound}]")
+
+plt.xlabel("Data Point Index")
+plt.ylabel("Residual (Interest_Rate - Prediction)")
+plt.title("Residuals with Highlighted Interval")
+plt.legend()
+plt.show()
+
+# %%
+# HuberLoss, delta = 4.5
+
+x0 = df_sample['Delay_from_due_date']
+x1 = df_sample['Num_Bank_Accounts']
+x2 = df_sample['Num_Credit_Inquiries']
+
+interest = (np.cos(np.cos((x0 * -0.011121384) + (x2 * (x1 * -0.0106610935)))) * 37.434177) + -13.152287
+
+print(interest)
+
+# %%
+# HuberLoss, delta = 1.5
+
+x0 = df_sample['Delay_from_due_date']
+x1 = df_sample['Num_Bank_Accounts']
+x2 = df_sample['Num_Credit_Inquiries']
+
+interest = (((x0 * 0.013395232) + np.sin(x1 * (x2 * 0.011614522))) * 12.717946) + 4.773303
+
+print(interest)
+
+# %%
+
+import matplotlib.pyplot as plt
+
+# Create a figure with two subplots
+plt.figure(figsize=(12, 5))
+
+# Plot the Actual Interest Rate distribution
+plt.subplot(1, 2, 1)
+plt.hist(df_sample['Interest_Rate'], bins=30, alpha=0.7, color='blue', label='Actual Interest Rate')
+plt.xlabel('Interest Rate')
+plt.ylabel('Frequency')
+plt.title('Actual Interest Rate Distribution')
+plt.legend()
+
+# Plot the Predicted Interest Rate distribution
+plt.subplot(1, 2, 2)
+plt.hist(interest, bins=30, alpha=0.7, color='green', label='Predicted Interest Rate')
+plt.xlabel('Interest Rate')
+plt.ylabel('Frequency')
+plt.title('Predicted Interest Rate Distribution')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+
+# %%
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(8, 6))
+plt.hist(df_sample['Interest_Rate'], bins=30, alpha=0.5, color='blue', label='Actual Interest Rate')
+plt.hist(interest, bins=30, alpha=0.5, color='green', label='Predicted Interest Rate')
+plt.xlabel('Interest Rate')
+plt.ylabel('Frequency')
+plt.title('Overlay: Actual vs. Predicted Interest Rate Distributions')
+plt.legend()
+plt.show()
+
+
+# %%
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+plt.figure(figsize=(8, 6))
+sns.kdeplot(df_sample['Interest_Rate'], fill=True, color='blue', label='Actual Interest Rate')
+sns.kdeplot(interest, fill=True, color='green', label='Predicted Interest Rate')
+plt.xlabel('Interest Rate')
+plt.ylabel('Density')
+plt.title('Density Plot: Actual vs. Predicted Interest Rate')
+plt.legend()
+plt.show()
+
+
+# %%
+df_sample = df_sample.reset_index(drop=True)
+interest = interest.reset_index(drop=True)
+print(df_sample['Interest_Rate'])
+df_sample_syn = df_sample.copy()
+df_sample_syn['Interest_Rate'] = interest
+print(df_sample['Interest_Rate'])
+print(df_sample_syn['Interest_Rate'])
+
+# %%
+# Step 4: Generate the profiling report
+profile_sample = ProfileReport(df_sample, title="YData Profiling Report SAMPLE", explorative=True)
+
+# Step 5: Display the report in the notebook
+profile_sample.to_notebook_iframe()
+
+# Alternatively, save the report to an HTML file
+profile_sample.to_file('profiling/profiling_report_credit_score_test_SAMPLE.html')
+
+# %%
+# Step 4: Generate the profiling report
+profile_sample_syn = ProfileReport(df_sample_syn, title="YData Profiling Report SAMPLE SYN", explorative=True)
+
+# Step 5: Display the report in the notebook
+profile_sample_syn.to_notebook_iframe()
+
+# Alternatively, save the report to an HTML file
+profile_sample_syn.to_file('profiling/profiling_report_credit_score_test_SAMPLE_SYN.html')
+
+
