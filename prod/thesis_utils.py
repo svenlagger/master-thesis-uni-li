@@ -8,6 +8,7 @@ from sklearn.metrics import mean_squared_error
 from typing import Union
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.stats import gaussian_kde
 from distfit import distfit
 import copy
 import json
@@ -100,6 +101,8 @@ def correct_sr_inference(
 
 def plot_histograms(
         datasets: list[tuple[ArrayLike, str, str]],
+        xlabel: str,
+        ylabel: str = 'Frequency',
         rows: int = 1,
         cols: int = None,
         bins: int = 30,
@@ -121,8 +124,8 @@ def plot_histograms(
             max_freq = max(max_freq, freq.max())
             plt.hist(data, bins=bin_edges, alpha=0.5, label=label, color=color)
 
-        plt.xlabel('Price')
-        plt.ylabel('Frequency')
+        plt.xlabel(xlabel)
+        plt.ylabel(ylabel)
         plt.title('Stacked Histogram of All Distributions')
         plt.legend()
         plt.xlim(global_min, global_max)
@@ -146,8 +149,8 @@ def plot_histograms(
         for i, (data, label, color) in enumerate(datasets):
             plt.subplot(rows, cols, i + 1)
             plt.hist(data, bins=bin_edges, alpha=0.7, color=color, label=label)
-            plt.xlabel('Price')
-            plt.ylabel('Frequency')
+            plt.xlabel(xlabel)
+            plt.ylabel(ylabel)
             plt.title(f'{label} Distribution')
             plt.legend()
             plt.xlim(global_min, global_max)
@@ -158,56 +161,62 @@ def plot_histograms(
 
 
 def plot_densities(
-        datasets: list[tuple[ArrayLike, str, str]],
-        rows: int = 1,
-        cols: int = None,
-        figsize_per_plot: tuple[int, int] = (5, 5),
-        stack: bool = False,
-        bw_adjust: float = 1.0
-    ):
-
+    datasets: list[tuple[ArrayLike, str, str]],
+    xlabel: str,
+    ylabel: str = 'Density',
+    rows: int = 1,
+    cols: int = None,
+    figsize_per_plot: tuple[int, int] = (5, 5),
+    stack: bool = False,
+    bw_adjust: float = 1.0
+):
     n = len(datasets)
 
-    global_min = min(data.min() for data, _, _ in datasets)
-    global_max = max(data.max() for data, _, _ in datasets)
-
+    # Compute global min and max for x-axis
+    global_min = min(np.min(data) for data, _, _ in datasets)
+    global_max = max(np.max(data) for data, _, _ in datasets)
     x_vals = np.linspace(global_min, global_max, 1000)
+
+    # Compute max density using gaussian_kde
     max_density = 0
     for data, _, _ in datasets:
-        kde = sns.kdeplot(data, bw_adjust=bw_adjust).get_lines()[0].get_data()
-        max_density = max(max_density, max(kde[1]))
-    plt.clf()
+        kde = gaussian_kde(data, bw_method=bw_adjust)
+        density = kde(x_vals)
+        max_density = max(max_density, np.max(density))
 
+    # Plot stacked or individual
     if stack:
-        plt.figure(figsize=figsize_per_plot)
+        fig, ax = plt.subplots(figsize=figsize_per_plot)
         for data, label, color in datasets:
-            sns.kdeplot(data, fill=True, color=color, label=label, bw_adjust=bw_adjust)
+            sns.kdeplot(data, fill=True, color=color, label=label, bw_adjust=bw_adjust, ax=ax)
 
-        plt.xlabel('Price')
-        plt.ylabel('Density')
-        plt.title('Stacked Density Plot of All Distributions')
-        plt.legend()
-        plt.xlim(global_min, global_max)
-        plt.ylim(0, max_density)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_title('Stacked Density Plot of All Distributions')
+        # ax.set_xlim(global_min, global_max)
+        # ax.set_ylim(0, max_density)
+        ax.legend()
         plt.tight_layout()
         plt.show()
 
     else:
         if cols is None:
             cols = int(np.ceil(n / rows))
-        fig_width = figsize_per_plot[0] * cols
-        fig_height = figsize_per_plot[1] * rows
-        plt.figure(figsize=(fig_width, fig_height))
+        fig, axes = plt.subplots(rows, cols, figsize=(figsize_per_plot[0] * cols, figsize_per_plot[1] * rows))
+        axes = np.array(axes).flatten()
 
-        for i, (data, label, color) in enumerate(datasets):
-            plt.subplot(rows, cols, i + 1)
-            sns.kdeplot(data, fill=True, color=color, label=label, bw_adjust=bw_adjust)
-            plt.xlabel('Price')
-            plt.ylabel('Density')
-            plt.title(f'{label} Density')
-            plt.legend()
-            plt.xlim(global_min, global_max)
-            plt.ylim(0, max_density)
+        for ax, (data, label, color) in zip(axes, datasets):
+            sns.kdeplot(data, fill=True, color=color, label=label, bw_adjust=bw_adjust, ax=ax)
+            ax.set_xlabel(xlabel)
+            ax.set_ylabel(ylabel)
+            ax.set_title(f'{label} Density')
+            ax.set_xlim(global_min, global_max)
+            ax.set_ylim(0, max_density * 1.1)
+            ax.legend()
+
+        # Hide unused subplots if any
+        for i in range(len(datasets), len(axes)):
+            fig.delaxes(axes[i])
 
         plt.tight_layout()
         plt.show()
@@ -361,17 +370,48 @@ def get_distribution_statements(distr_report: dict, dataset: pd.DataFrame):
     statement = None
     for col, result in distr_report.items():
         if result is not None:
-            col_min = dataset[col].min().round(3)
-            col_max = dataset[col].max().round(3)
+            col_min = round(dataset[col].min(), 3)
+            col_max = round(dataset[col].max(), 3)
             col_details = result['parameters']
             if col_details['name'] == 'norm':
-                statement = (f'Column \"{col}\": distribution = gaussian, mean = {(col_details['params'][0]).round(3)}, deviation = {(col_details['params'][1]).round(3)}, range = {col_min} to {col_max}')
+                statement = (f'Column \"{col}\": distribution = gaussian, mean = {(col_details["params"][0]).round(3)}, deviation = {(col_details["params"][1]).round(3)}, range = {col_min} to {col_max}')
                 if col in discrete_columns: statement += ' (with only whole numbers allowed)'
             elif col_details['name'] == 'lognorm':
-                statement = (f'Column \"{col}\": distribution = lognorm, mean = {(np.log(col_details['params'][2])).round(3)}, deviation = {(col_details['params'][0]).round(3)}, range = {col_min} to {col_max}')
+                statement = (f'Column \"{col}\": distribution = lognorm, mean = {(np.log(col_details["params"][2])).round(3)}, deviation = {(col_details["params"][0]).round(3)}, range = {col_min} to {col_max}')
                 if col in discrete_columns: statement += ' (with only whole numbers allowed)'
             elif col_details['name'] == 'gamma':
-                statement = (f'Column \"{col}\": distribution = gaussian, alpha = {(col_details['params'][0]).round(3)}, theta = {(col_details['params'][2]).round(3)}, range = {col_min} to {col_max}')
+                statement = (f'Column \"{col}\": distribution = gamma, alpha = {(col_details["params"][0]).round(3)}, theta = {(col_details["params"][2]).round(3)}, range = {col_min} to {col_max}')
                 if col in discrete_columns: statement += ' (with only whole numbers allowed)'
             distr_statements.append(statement)
     return distr_statements
+
+
+def auto_preprocess_bn(df, bins=5, discrete_threshold=10):
+    """
+    Preprocesses the DataFrame by:
+      - Discretizing continuous numerical columns (using pd.qcut) 
+      - Leaving already discrete numerical columns untouched
+      - Converting object type columns to categorical.
+    
+    Parameters:
+      df: pd.DataFrame
+      bins: int, the number of quantile bins for discretization (default 5)
+      discrete_threshold: int, if a numeric column has fewer unique values than this threshold,
+                          it is treated as discrete.
+    Returns:
+      pd.DataFrame with preprocessed columns.
+    """
+    df_processed = df.copy()
+    for col in df_processed.columns:
+        if pd.api.types.is_numeric_dtype(df_processed[col]):
+            # Heuristic: if float type or many unique values, then consider it continuous.
+            if df_processed[col].dtype in [np.float64, np.float32] or df_processed[col].nunique() > discrete_threshold:
+                try:
+                    # Use 'duplicates="drop"' to handle cases with non-unique bin edges.
+                    df_processed[col] = pd.qcut(df_processed[col], q=bins, labels=False, duplicates='drop')
+                except Exception as e:
+                    print(f"Error discretizing column {col}: {e}")
+        elif df_processed[col].dtype == 'object':
+            # Convert string columns to categorical type.
+            df_processed[col] = df_processed[col].astype('category')
+    return df_processed
