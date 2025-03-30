@@ -12,6 +12,7 @@ from scipy.stats import gaussian_kde
 from distfit import distfit
 import copy
 import json
+import bnlearn as bn
 
 
 # Define a reusable type alias
@@ -233,7 +234,7 @@ def fit_distributions(
     numeric_cols = dataset.select_dtypes(include='number').columns
 
     for col in numeric_cols:
-        print(f"Processing column: {col}")
+        # print(f"Processing column: {col}")
         
         # Extract and clean the data for the current column
         data = dataset[col].dropna().values
@@ -386,22 +387,12 @@ def get_distribution_statements(distr_report: dict, dataset: pd.DataFrame):
     return distr_statements
 
 
-def auto_preprocess_bn(df, bins=5, discrete_threshold=10):
-    """
-    Preprocesses the DataFrame by:
-      - Discretizing continuous numerical columns (using pd.qcut) 
-      - Leaving already discrete numerical columns untouched
-      - Converting object type columns to categorical.
-    
-    Parameters:
-      df: pd.DataFrame
-      bins: int, the number of quantile bins for discretization (default 5)
-      discrete_threshold: int, if a numeric column has fewer unique values than this threshold,
-                          it is treated as discrete.
-    Returns:
-      pd.DataFrame with preprocessed columns.
-    """
-    df_processed = df.copy()
+def auto_preprocess_bn(
+        dataset: pd.DataFrame, 
+        bins: int = 5, 
+        discrete_threshold: int = 10
+    ):
+    df_processed = dataset.copy()
     for col in df_processed.columns:
         if pd.api.types.is_numeric_dtype(df_processed[col]):
             # Heuristic: if float type or many unique values, then consider it continuous.
@@ -415,3 +406,58 @@ def auto_preprocess_bn(df, bins=5, discrete_threshold=10):
             # Convert string columns to categorical type.
             df_processed[col] = df_processed[col].astype('category')
     return df_processed
+
+
+def get_bn_statements(model: (dict | list)):
+    bn_statements = []
+    try:
+        for edge in model['model_edges']:
+            bn_statements.append(f'{edge[0]} -> {edge[1]}')
+        return bn_statements
+    except KeyError:
+        return None
+
+
+def get_llm_generation_prompt(
+        dataset: pd.DataFrame, 
+        correlation_matrix: pd.DataFrame,
+        include_bn: bool = False, 
+        enforce_positive_nums: bool = False,
+        n_rows: int = None,
+        discrete_threshold: int = 10
+    ):
+    n_columns = len(dataset.columns)
+    if not n_rows:
+        n_rows = len(dataset)
+
+    prompt = f'Generate a table with {n_columns} columns and {n_rows} rows with the following properties:\n\n'
+
+    distributions = fit_distributions(dataset)
+    distribution_staements = get_distribution_statements(distributions, dataset)
+    for statement in distribution_staements:
+        prompt += statement + '\n'
+
+    prompt += '\nWith correlations:\n'
+
+    correlation_statements = get_correlation_statements(correlation_matrix)
+    for statement in correlation_statements:
+        prompt += statement + '\n'
+    
+    if include_bn:
+        prompt += '\nWith Bayesian Network structure:\n'
+        df_preprocessed = auto_preprocess_bn(dataset, discrete_threshold=discrete_threshold)
+        model = bn.structure_learning.fit(df_preprocessed, methodtype='hc', scoretype='bic', verbose=0)
+        bn_statements = get_bn_statements(model)
+        for statement in bn_statements:
+            prompt += statement + '\n'
+
+    prompt += '\n'
+
+    if enforce_positive_nums:
+        prompt += 'All numbers in the table must be positive. '
+
+    prompt += ('Re-check the data to ensure that all conditions are met before displaying. '
+               'Every condition must be met exactly. Do not output until exactly correct. '
+               'Provide the data in a downloadable Excel file.')
+
+    return prompt
