@@ -13,6 +13,7 @@ from distfit import distfit
 import copy
 import json
 import bnlearn as bn
+from collections import defaultdict
 
 
 # Define a reusable type alias
@@ -461,3 +462,387 @@ def get_llm_generation_prompt(
                'Provide the data in a downloadable Excel file.')
 
     return prompt
+
+
+def generate_bn_generation_profile(df, categorical_cols, bn_edges, distfit_dict=None, bins=5, discrete_threshold=10):
+    """
+    Generates a generation profile from data and a Bayesian network structure.
+    
+    Parameters:
+        df (pd.DataFrame): The original dataset.
+        categorical_cols (list): List of column names that are categorical.
+        bn_edges (list of tuples): BN structure as (parent, child) edges.
+        distfit_dict (dict, optional): Dictionary with best-fitting distribution details
+            for numerical variables (e.g., output from distfit).
+        bins (int, optional): Number of bins to use when discretizing continuous parent columns.
+        discrete_threshold (int, optional): Threshold for unique values to consider a numeric column as continuous.
+    
+    Returns:
+        dict: Generation profile containing marginal and conditional parameters.
+    """
+    profile = {"variables": {}, "structure": bn_edges}
+    all_vars = list(df.columns)
+    
+    # Process unconditional/marginal profiles using original continuous data.
+    for col in all_vars:
+        if col in categorical_cols:
+            marginal = df[col].value_counts(normalize=True).to_dict()
+            levels = list(marginal.keys())
+            profile["variables"][col] = {
+                "type": "categorical",
+                "levels": levels,
+                "marginal": marginal
+            }
+        else:
+            col_min = round(df[col].min(), 3)
+            col_max = round(df[col].max(), 3)
+            if distfit_dict is not None and col in distfit_dict and distfit_dict[col] is not None:
+                col_details = distfit_dict[col]['parameters']
+                if col_details['name'] == 'norm':
+                    distribution_name = "Gaussian"
+                    parameters = {
+                        "mean": round(col_details["params"][0], 3),
+                        "deviation": round(col_details["params"][1], 3),
+                        "min": col_min,
+                        "max": col_max
+                    }
+                elif col_details['name'] == 'lognorm':
+                    distribution_name = "Lognormal"
+                    parameters = {
+                        "mean": round(np.log(col_details["params"][2]), 3),
+                        "deviation": round(col_details["params"][0], 3),
+                        "min": col_min,
+                        "max": col_max
+                    }
+                elif col_details['name'] == 'gamma':
+                    distribution_name = "Gamma"
+                    parameters = {
+                        "alpha": round(col_details["params"][0], 3),
+                        "theta": round(col_details["params"][2], 3),
+                        "min": col_min,
+                        "max": col_max
+                    }
+                else:
+                    distribution_name = col_details['name'].capitalize()
+                    parameters = {
+                        "params": [round(p, 3) for p in col_details["params"]],
+                        "min": col_min,
+                        "max": col_max
+                    }
+                profile["variables"][col] = {
+                    "type": "numerical",
+                    "distribution": distribution_name,
+                    "parameters": parameters
+                }
+            else:
+                mean_val = round(df[col].mean(), 3)
+                std_val = round(df[col].std(), 3)
+                profile["variables"][col] = {
+                    "type": "numerical",
+                    "distribution": "Gaussian",
+                    "parameters": {
+                        "mean": mean_val,
+                        "deviation": std_val,
+                        "min": col_min,
+                        "max": col_max
+                    }
+                }
+    
+    # Build mapping from each child to its parent(s) from the BN edges.
+    parent_dict = defaultdict(list)
+    for parent, child in bn_edges:
+        parent_dict[child].append(parent)
+    
+    # Compute conditional distributions.
+    for child, parents in parent_dict.items():
+        if child not in df.columns:
+            continue
+        
+        # Create a copy of df for grouping and bin the parent columns into intervals.
+        df_group = df.copy()
+        for parent in parents:
+            if parent not in categorical_cols and pd.api.types.is_numeric_dtype(df_group[parent]):
+                # If too many unique values, bin into quantile-based intervals.
+                if df_group[parent].nunique() > discrete_threshold or df_group[parent].dtype in [np.float64, np.float32]:
+                    try:
+                        # Compute bin edges based on quantiles.
+                        quantiles = np.linspace(0, 1, bins + 1)
+                        bin_edges = df_group[parent].quantile(quantiles).unique()
+                        bin_edges = np.sort(bin_edges)
+                        # Only bin if there is more than one unique edge.
+                        if len(bin_edges) > 1:
+                            # Use pd.cut with right=False for left-closed, right-open intervals.
+                            df_group[parent] = pd.cut(df_group[parent], bins=bin_edges, include_lowest=True, right=False)
+                        # Else leave the column as is.
+                    except Exception as e:
+                        print(f"Error discretizing column {parent}: {e}")
+        
+        grouped = df_group.groupby(parents)
+        cond_table = {}
+        
+        # Determine the unconditional distribution type of the child, if available.
+        if distfit_dict is not None and child in distfit_dict and distfit_dict[child] is not None:
+            child_dist = distfit_dict[child]['parameters']['name']
+        else:
+            child_dist = 'norm'
+            
+        for group_vals, group_df in grouped:
+            # For a single parent, group_vals is an Interval; for multiple parents, it's a tuple.
+            if not isinstance(group_vals, tuple):
+                config_key = f"{parents[0]}={group_vals}"
+            else:
+                config_key = ",".join([f"{p}={v}" for p, v in zip(parents, group_vals)])
+            
+            if child in categorical_cols:
+                cond_prob = group_df[child].value_counts(normalize=True).to_dict()
+                cond_table[config_key] = cond_prob
+            else:
+                n = group_df[child].shape[0]
+                base_deviation = 0.0 if n < 2 else group_df[child].std()
+                if child_dist == 'lognorm':
+                    valid = group_df[child] > 0
+                    if valid.sum() >= 2:
+                        log_vals = np.log(group_df[child][valid])
+                        cond_mean = log_vals.mean()
+                        cond_std = log_vals.std()
+                    else:
+                        cond_mean, cond_std = np.nan, np.nan
+                    cond_table[config_key] = {
+                        "mean": round(cond_mean, 3),
+                        "deviation": round(cond_std, 3)
+                    }
+                elif child_dist == 'gamma':
+                    m = group_df[child].mean()
+                    s = base_deviation
+                    if m > 0 and s != 0:
+                        shape = (m/s)**2
+                        scale = (s**2)/m
+                    else:
+                        shape, scale = 0.0, 0.0
+                    cond_table[config_key] = {
+                        "alpha": round(shape, 3),
+                        "theta": round(scale, 3)
+                    }
+                else:
+                    m = group_df[child].mean()
+                    s = base_deviation
+                    cond_table[config_key] = {
+                        "mean": round(m, 3),
+                        "deviation": round(s, 3)
+                    }
+        if child in profile["variables"]:
+            profile["variables"][child]["conditional"] = {
+                "parents": parents,
+                "table": cond_table
+            }
+    
+    return profile
+
+
+def generate_generation_profile_2(df, categorical_cols, bn_edges, distfit_dict=None):
+    """
+    Generates a generation profile from data and a Bayesian network structure.
+    
+    Parameters:
+        df (pd.DataFrame): The original dataset.
+        categorical_cols (list): List of column names that are categorical.
+        bn_edges (list of tuples): BN structure as (parent, child) edges.
+        distfit_dict (dict, optional): Dictionary with best-fitting distribution details
+            for numerical variables (e.g., output from distfit).
+    
+    Returns:
+        dict: Generation profile containing marginal and conditional parameters.
+    """
+    # List all variables.
+    all_vars = list(df.columns)
+    profile = {"variables": {}, "structure": bn_edges}
+    
+    # Optionally, determine discrete numeric columns (assumed to be defined elsewhere).
+    discrete_columns = get_discrete_numerical_columns(df) if distfit_dict is not None else []
+    
+    # Process each variable.
+    for col in all_vars:
+        if col in categorical_cols:
+            # Compute marginal probabilities for categorical variables.
+            marginal = df[col].value_counts(normalize=True).to_dict()
+            levels = list(marginal.keys())
+            profile["variables"][col] = {
+                "type": "categorical",
+                "levels": levels,
+                "marginal": marginal
+            }
+        else:
+            # For numerical variables, check if distribution details are provided.
+            col_min = round(df[col].min(), 3)
+            col_max = round(df[col].max(), 3)
+            if distfit_dict is not None and col in distfit_dict and distfit_dict[col] is not None:
+                col_details = distfit_dict[col]['parameters']
+                # Build distribution details based on the distribution name.
+                if col_details['name'] == 'norm':
+                    # Gaussian distribution.
+                    distribution_name = "Gaussian"
+                    parameters = {
+                        "mean": round(col_details["params"][0], 3),
+                        "deviation": round(col_details["params"][1], 3),
+                        "min": col_min,
+                        "max": col_max
+                    }
+                elif col_details['name'] == 'lognorm':
+                    # Lognormal distribution.
+                    distribution_name = "Lognormal"
+                    parameters = {
+                        "mean": round(np.log(col_details["params"][2]), 3),
+                        "deviation": round(col_details["params"][0], 3),
+                        "min": col_min,
+                        "max": col_max
+                    }
+                elif col_details['name'] == 'gamma':
+                    # Gamma distribution.
+                    distribution_name = "Gamma"
+                    parameters = {
+                        "alpha": round(col_details["params"][0], 3),
+                        "theta": round(col_details["params"][2], 3),
+                        "min": col_min,
+                        "max": col_max
+                    }
+                else:
+                    # Fallback for any other distribution.
+                    distribution_name = col_details['name'].capitalize()
+                    parameters = {
+                        "params": [round(p, 3) for p in col_details["params"]],
+                        "min": col_min,
+                        "max": col_max
+                    }
+                # Optionally flag if the column is discrete.
+                if col in discrete_columns:
+                    parameters["discrete"] = True
+                
+                profile["variables"][col] = {
+                    "type": "numerical",
+                    "distribution": distribution_name,
+                    "parameters": parameters
+                }
+            else:
+                # Fallback to Gaussian if no distribution info is provided.
+                mean_val = round(df[col].mean(), 3)
+                std_val = round(df[col].std(), 3)
+                profile["variables"][col] = {
+                    "type": "numerical",
+                    "distribution": "Gaussian",
+                    "parameters": {
+                        "mean": mean_val,
+                        "deviation": std_val,
+                        "min": col_min,
+                        "max": col_max
+                    }
+                }
+    
+    # Build a dictionary mapping each child to its parent(s) from the BN edges.
+    parent_dict = defaultdict(list)
+    for parent, child in bn_edges:
+        parent_dict[child].append(parent)
+    
+    # For each variable with parents, compute the conditional distribution.
+    for child, parents in parent_dict.items():
+        if child not in df.columns:
+            continue
+        grouped = df.groupby(parents)
+        cond_table = {}
+        for group_vals, group_df in grouped:
+            if not isinstance(group_vals, tuple):
+                config_key = f"{parents[0]}={group_vals}"
+            else:
+                config_key = ",".join([f"{p}={v}" for p, v in zip(parents, group_vals)])
+            if child in categorical_cols:
+                cond_prob = group_df[child].value_counts(normalize=True).to_dict()
+                cond_table[config_key] = cond_prob
+            else:
+                mean_val = group_df[child].mean()
+                std_val = group_df[child].std()
+                cond_table[config_key] = {"mean": mean_val, "std": std_val}
+        
+        if child in profile["variables"]:
+            profile["variables"][child]["conditional"] = {
+                "parents": parents,
+                "table": cond_table
+            }
+    
+    return profile
+
+
+def generate_generation_profile_OBSOLETE(df, categorical_cols, bn_edges):
+    """
+    Generates a generation profile from data and a Bayesian network structure.
+    
+    Parameters:
+        df (pd.DataFrame): The original dataset.
+        categorical_cols (list): List of column names that are categorical.
+        bn_edges (list of tuples): BN structure as (parent, child) edges.
+    
+    Returns:
+        dict: Generation profile containing marginal and conditional parameters.
+    """
+    # List all variables and deduce numerical columns
+    all_vars = list(df.columns)
+    numerical_cols = [col for col in all_vars if col not in categorical_cols]
+
+    profile = {"variables": {}, "structure": bn_edges}
+    
+    # Compute marginal distributions or parameters for each variable.
+    for col in all_vars:
+        if col in categorical_cols:
+            # Compute marginal probabilities for categorical variable.
+            marginal = df[col].value_counts(normalize=True).to_dict()
+            levels = list(marginal.keys())
+            profile["variables"][col] = {
+                "type": "categorical",
+                "levels": levels,
+                "marginal": marginal
+            }
+        else:
+            # For numerical variables, assume a Gaussian distribution.
+            mean_val = df[col].mean()
+            std_val = df[col].std()
+            profile["variables"][col] = {
+                "type": "numerical",
+                "distribution": "Gaussian",
+                "parameters": {"mean": mean_val, "std": std_val}
+            }
+    
+    # Build a dictionary mapping each child to its parent(s) from the BN edges.
+    parent_dict = defaultdict(list)
+    for parent, child in bn_edges:
+        parent_dict[child].append(parent)
+    
+    # For each variable that has parents, compute the conditional distribution.
+    for child, parents in parent_dict.items():
+        # Ensure the child is in the dataset.
+        if child not in df.columns:
+            continue
+        # Group the data by the parent variables.
+        grouped = df.groupby(parents)
+        cond_table = {}
+        for group_vals, group_df in grouped:
+            # Format the parent's configuration as a string key.
+            if not isinstance(group_vals, tuple):
+                config_key = f"{parents[0]}={group_vals}"
+            else:
+                config_key = ",".join([f"{p}={v}" for p, v in zip(parents, group_vals)])
+            
+            if child in categorical_cols:
+                # Compute conditional probabilities for categorical child.
+                cond_prob = group_df[child].value_counts(normalize=True).to_dict()
+                cond_table[config_key] = cond_prob
+            else:
+                # For numerical child, compute mean and std conditional on the parent's config.
+                mean_val = group_df[child].mean()
+                std_val = group_df[child].std()
+                cond_table[config_key] = {"mean": mean_val, "std": std_val}
+        
+        # Save the conditional information in the profile.
+        profile["variables"][child]["conditional"] = {
+            "parents": parents,
+            "table": cond_table
+        }
+    
+    return profile
