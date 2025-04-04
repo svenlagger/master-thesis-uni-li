@@ -365,26 +365,39 @@ def get_discrete_numerical_columns(dataset: pd.DataFrame):
     return discrete_cols
 
 
+def get_categorical_columns(dataset: pd.DataFrame):
+    all_cols = dataset.columns.to_list()
+    # Select only numeric columns
+    numeric_df = dataset.select_dtypes(include=['number'])
+    numeric_cols = numeric_df.columns.to_list()
+    categorical_cols = [item for item in all_cols if item not in numeric_cols]
+    return categorical_cols
+
+
 # TODO add min-max values and handle discrete numeric columns
 def get_distribution_statements(distr_report: dict, dataset: pd.DataFrame):
     discrete_columns = get_discrete_numerical_columns(dataset)
     distr_statements = []
     statement = None
-    for col, result in distr_report.items():
-        if result is not None:
+    for col in dataset:
+        if col in distr_report and distr_report[col] is not None:
+            result = distr_report[col]
             col_min = round(dataset[col].min(), 3)
             col_max = round(dataset[col].max(), 3)
             col_details = result['parameters']
             if col_details['name'] == 'norm':
-                statement = (f'Column \"{col}\": distribution = gaussian, mean = {(col_details["params"][0]).round(3)}, deviation = {(col_details["params"][1]).round(3)}, range = {col_min} to {col_max}')
+                statement = (f'Column \"{col}\": type = numerical, distribution = gaussian, mean = {(col_details["params"][0]).round(3)}, deviation = {(col_details["params"][1]).round(3)}, range = {col_min} to {col_max}')
                 if col in discrete_columns: statement += ' (with only whole numbers allowed)'
             elif col_details['name'] == 'lognorm':
-                statement = (f'Column \"{col}\": distribution = lognorm, mean = {(np.log(col_details["params"][2])).round(3)}, deviation = {(col_details["params"][0]).round(3)}, range = {col_min} to {col_max}')
+                statement = (f'Column \"{col}\": type = numerical, distribution = lognorm, mean = {(np.log(col_details["params"][2])).round(3)}, deviation = {(col_details["params"][0]).round(3)}, range = {col_min} to {col_max}')
                 if col in discrete_columns: statement += ' (with only whole numbers allowed)'
             elif col_details['name'] == 'gamma':
-                statement = (f'Column \"{col}\": distribution = gamma, alpha = {(col_details["params"][0]).round(3)}, theta = {(col_details["params"][2]).round(3)}, range = {col_min} to {col_max}')
+                statement = (f'Column \"{col}\": type = numerical, distribution = gamma, alpha = {(col_details["params"][0]).round(3)}, theta = {(col_details["params"][2]).round(3)}, range = {col_min} to {col_max}')
                 if col in discrete_columns: statement += ' (with only whole numbers allowed)'
-            distr_statements.append(statement)
+        else:
+            categories = json.dumps(dataset[col].unique().tolist())
+            statement = (f'Column \"{col}\": type = categorical, categories = {categories}')
+        distr_statements.append(statement)
     return distr_statements
 
 
