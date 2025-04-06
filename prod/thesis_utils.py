@@ -386,13 +386,13 @@ def get_distribution_statements(distr_report: dict, dataset: pd.DataFrame):
             col_max = round(dataset[col].max(), 3)
             col_details = result['parameters']
             if col_details['name'] == 'norm':
-                statement = (f'Column \"{col}\": type = numerical, distribution = gaussian, mean = {(col_details["params"][0]).round(3)}, deviation = {(col_details["params"][1]).round(3)}, range = {col_min} to {col_max}')
+                statement = (f'Column \"{col}\": type = numerical, distribution = gaussian, loc = {round(col_details["params"][0], 3)}, scale = {round(col_details["params"][1], 3)}, range = {col_min} to {col_max}')
                 if col in discrete_columns: statement += ' (with only whole numbers allowed)'
             elif col_details['name'] == 'lognorm':
-                statement = (f'Column \"{col}\": type = numerical, distribution = lognorm, mean = {(np.log(col_details["params"][2])).round(3)}, deviation = {(col_details["params"][0]).round(3)}, range = {col_min} to {col_max}')
+                statement = (f'Column \"{col}\": type = numerical, distribution = lognorm, s = {round(col_details["params"][0], 3)}, loc = {round(col_details["params"][1], 3)}, scale = {round(col_details["params"][2], 3)}, range = {col_min} to {col_max}')
                 if col in discrete_columns: statement += ' (with only whole numbers allowed)'
             elif col_details['name'] == 'gamma':
-                statement = (f'Column \"{col}\": type = numerical, distribution = gamma, alpha = {(col_details["params"][0]).round(3)}, theta = {(col_details["params"][2]).round(3)}, range = {col_min} to {col_max}')
+                statement = (f'Column \"{col}\": type = numerical, distribution = gamma, a = {round(col_details["params"][0], 3)}, loc = {round(col_details["params"][1], 3)}, scale = {round(col_details["params"][2], 3)}, range = {col_min} to {col_max}')
                 if col in discrete_columns: statement += ' (with only whole numbers allowed)'
         else:
             categories = json.dumps(dataset[col].unique().tolist())
