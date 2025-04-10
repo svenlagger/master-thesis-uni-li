@@ -14,6 +14,11 @@ import copy
 import json
 import bnlearn as bn
 from collections import defaultdict
+from scipy.stats import norm, gamma, lognorm, norm as normal_dist
+from scipy.special import softmax
+from numpy.linalg import cholesky
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 
 # Define a reusable type alias
@@ -79,7 +84,7 @@ def correct_sr_inference(
         'max_depth': 6
     }
 
-    num_rounds = 5000
+    num_rounds = 10000
     model_xgb = xgb.train(params, dtrain, num_rounds)
 
     # Evaluate on test set
@@ -650,3 +655,233 @@ def generate_bn_generation_profile(df, categorical_cols, bn_edges, distfit_dict=
             }
     
     return profile
+
+
+def convert_distfit_to_marginals(distr_report: dict, dataset: pd.DataFrame) -> dict:
+    discrete_columns = get_discrete_numerical_columns(dataset)
+    marginals = {}
+
+    for col in dataset.columns:
+        if col in distr_report and distr_report[col] is not None:
+            result = distr_report[col]
+            dist_name = result['parameters']['name']
+            params_list = result['parameters']['params']
+            col_min = round(dataset[col].min(), 3)
+            col_max = round(dataset[col].max(), 3)
+
+            # Initialize param_dict
+            param_dict = {}
+
+            # Handle known distributions
+            if dist_name == 'norm':
+                param_dict = {
+                    'loc': round(params_list[0], 3),
+                    'scale': round(params_list[1], 3)
+                }
+
+            elif dist_name == 'lognorm':
+                param_dict = {
+                    's': round(params_list[0], 3),
+                    'loc': round(params_list[1], 3),
+                    'scale': round(params_list[2], 3)
+                }
+
+            elif dist_name == 'gamma':
+                param_dict = {
+                    'a': round(params_list[0], 3),
+                    'loc': round(params_list[1], 3),
+                    'scale': round(params_list[2], 3)
+                }
+
+            else:
+                raise ValueError(f"Unsupported distribution '{dist_name}' for column '{col}'")
+
+            marginals[col] = {
+                'name': dist_name,
+                'params': param_dict,
+                'range': (col_min, col_max),
+                'round': col in discrete_columns
+            }
+
+    return marginals
+
+
+def nearest_pd(A):
+    B = (A + A.T) / 2
+    _, s, V = np.linalg.svd(B)
+    H = V.T @ np.diag(s) @ V
+    A2 = (B + H) / 2
+    A3 = (A2 + A2.T) / 2
+    spacing = np.spacing(np.linalg.norm(A))
+    I = np.eye(A.shape[0])
+    k = 1
+    while np.min(np.real(np.linalg.eigvals(A3))) < 0:
+        mineig = np.min(np.real(np.linalg.eigvals(A3)))
+        A3 += I * (-mineig * k**2 + spacing)
+        k += 1
+    return A3
+
+
+def generate_synthetic_dataset(
+    original_data: pd.DataFrame,
+    correlation_matrix: pd.DataFrame,
+    categorical_columns: list,
+    marginals: dict,
+    n_rows: int = 10000,
+    conditional_method: str = "quantile",
+    correlation_threshold: float = 0.25
+) -> pd.DataFrame:
+    """
+    Generate synthetic data using Gaussian copula and empirical marginals.
+    
+    Parameters:
+        original_data (pd.DataFrame): The original dataset (to extract categorical values).
+        correlation_matrix (pd.DataFrame): Full correlation matrix (numerical + categorical).
+        categorical_columns (list): List of categorical columns.
+        marginals (dict): Dictionary of distfit-style marginals for numerical variables.
+        n_rows (int): Number of rows to generate.
+        conditional_method (str): 'quantile' or 'softmax' for conditional categoricals.
+        correlation_threshold (float): Threshold for applying correlation logic.
+
+    Returns:
+        pd.DataFrame: Synthetic dataset.
+    """
+
+    numeric_cols = [col for col in correlation_matrix.columns if col not in categorical_columns]
+
+    # === 1. Reduce correlation matrix by threshold ===
+    reduced_corr = correlation_matrix.loc[numeric_cols, numeric_cols].copy()
+    reduced_corr[reduced_corr.abs() < correlation_threshold] = 0.0
+
+    # === 2. Make correlation matrix positive definite if needed ===
+    corr_array = nearest_pd(reduced_corr.values)
+    L = cholesky(corr_array)
+    Z = np.random.normal(size=(n_rows, len(numeric_cols)))
+    Z_corr = Z @ L.T
+
+    # === 3. Sample marginal distributions empirically ===
+    empirical_samples = {}
+    for col in numeric_cols:
+        info = marginals[col]
+        dist = info['name']
+        params = info['params']
+
+        if dist == 'gamma':
+            samples = gamma(a=params['a'], scale=params['scale']).rvs(n_rows) + params.get('loc', 0)
+        elif dist == 'lognorm':
+            samples = lognorm(s=params['s'], scale=params['scale']).rvs(n_rows) + params.get('loc', 0)
+        elif dist == 'norm':
+            samples = normal_dist(loc=params['loc'], scale=params['scale']).rvs(n_rows)
+        else:
+            raise ValueError(f"Unsupported distribution: {dist}")
+
+        minval, maxval = info['range']
+        if info.get('round', False):
+            samples = np.round(np.clip(samples, minval, maxval)).astype(int)
+        else:
+            samples = np.clip(samples, minval, maxval)
+
+        empirical_samples[col] = samples
+
+    # === 4. Reorder empirical samples by Z_corr rank (copula logic) ===
+    df = pd.DataFrame()
+    for i, col in enumerate(numeric_cols):
+        empirical = np.sort(empirical_samples[col])
+        rank_order = Z_corr[:, i].argsort()
+        inverse_order = np.argsort(rank_order)
+        df[col] = empirical[inverse_order]
+
+    # === 5. Generate categorical variables ===
+    for cat_col in categorical_columns:
+        possible_values = original_data[cat_col].dropna().unique()
+        cat_corrs = correlation_matrix.loc[cat_col, numeric_cols].abs()
+        strong_corrs = cat_corrs[cat_corrs >= correlation_threshold]
+
+        if not strong_corrs.empty:
+            # Build weighted score from correlated variables
+            weights = strong_corrs / strong_corrs.sum()
+            score = sum(Z_corr[:, numeric_cols.index(col)] * weight for col, weight in weights.items())
+
+            # Assign category via quantile or softmax logic
+            if conditional_method == "quantile":
+                bins = np.quantile(score, [0.33, 0.66])
+                df[cat_col] = [
+                    possible_values[0] if s <= bins[0]
+                    else possible_values[1] if s <= bins[1]
+                    else possible_values[2 % len(possible_values)]
+                    for s in score
+                ]
+            elif conditional_method == "softmax":
+                score_scaled = (score - score.min()) / (score.max() - score.min())
+                probs = softmax(np.vstack([
+                    3 * score_scaled,
+                    3 * (1 - np.abs(score_scaled - 0.5)),
+                    3 * (1 - score_scaled)
+                ]).T, axis=1)
+                df[cat_col] = [np.random.choice(possible_values, p=p[:len(possible_values)]) for p in probs]
+            else:
+                raise ValueError("Invalid conditional_method: use 'quantile' or 'softmax'")
+        else:
+            # No strong correlation — sample randomly from original values
+            df[cat_col] = np.random.choice(possible_values, size=n_rows)
+
+    return df
+
+
+def plot_correlation_matrices(corr1: pd.DataFrame, corr2: pd.DataFrame, title1: str = "Matrix 1", title2: str = "Matrix 2"):
+    """
+    Plot two correlation matrices side by side with hoverable heatmaps.
+    
+    Args:
+        corr1 (pd.DataFrame): First correlation matrix.
+        corr2 (pd.DataFrame): Second correlation matrix.
+        title1 (str): Title for the first heatmap.
+        title2 (str): Title for the second heatmap.
+    """
+    if corr1.shape != corr2.shape or not all(corr1.columns == corr2.columns):
+        raise ValueError("Correlation matrices must have the same shape and column labels.")
+    
+    features = corr1.columns.tolist()
+    
+    fig = make_subplots(rows=1, cols=2, subplot_titles=(title1, title2))
+
+    # First heatmap
+    fig.add_trace(
+        go.Heatmap(
+            z=corr1.values,
+            x=features,
+            y=features,
+            colorscale='RdBu',
+            zmin=-1,
+            zmax=1,
+            hoverongaps=False,
+            colorbar=dict(title="Correlation", len=0.9),
+            hovertemplate="X: %{x}<br>Y: %{y}<br>Corr: %{z:.2f}<extra></extra>"
+        ),
+        row=1, col=1
+    )
+
+    # Second heatmap
+    fig.add_trace(
+        go.Heatmap(
+            z=corr2.values,
+            x=features,
+            y=features,
+            colorscale='RdBu',
+            zmin=-1,
+            zmax=1,
+            hoverongaps=False,
+            showscale=False,
+            hovertemplate="X: %{x}<br>Y: %{y}<br>Corr: %{z:.2f}<extra></extra>"
+        ),
+        row=1, col=2
+    )
+
+    fig.update_layout(
+        title_text="Comparison of Correlation Matrices",
+        height=700,
+        width=1200,
+        showlegend=False
+    )
+
+    fig.show()
