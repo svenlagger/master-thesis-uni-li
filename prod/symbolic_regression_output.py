@@ -3,7 +3,7 @@ import os
 os.environ["JULIA_NUM_THREADS"] = "8"  # Use 8 threads (adjust as needed)
 from pysr import PySRRegressor
 
-df = pd.read_csv('C:/Users/svenl/vs_code_projects/hyperRealDataDescriber/data/credit_score/cleaned_credit_score_v2.csv')
+df = pd.read_csv('C:/Users/svenl/vs_code_projects/hyperRealDataDescriber/data/credit_score/cleaned_credit_score_v2_copula_syn.csv')
 
 # df_clean = df.dropna(subset=['Delay_from_due_date', 'Num_Bank_Accounts', 'Num_Credit_Inquiries', 'Interest_Rate'])
 # df_clean = df_clean[df_clean['Interest_Rate'] <= 32]
@@ -15,7 +15,7 @@ y = df_sample['Interest_Rate'].to_numpy()  # Target: A
 
 # Use PySR to find the symbolic relationship
 model = PySRRegressor(
-    niterations=256,  # Number of iterations to search for equations
+    niterations=512,  # Number of iterations to search for equations
     binary_operators=["+", "-", "*", "/"],
     unary_operators=["sin", "cos", "exp", "log", "abs", "sqrt"],
     elementwise_loss="loss(x, y) = (x - y)^2",  # Define loss function (mean squared error)

@@ -107,7 +107,7 @@ def correct_sr_inference(
 
 
 def plot_histograms(
-        datasets: list[tuple[ArrayLike, str, str]],
+        datasets: list[tuple[np.ndarray, str, str]],
         xlabel: str,
         ylabel: str = 'Frequency',
         rows: int = 1,
@@ -116,19 +116,20 @@ def plot_histograms(
         figsize_per_plot: tuple[int, int] = (5, 5),
         stack: bool = False
     ):
+    import numpy as np
+    import matplotlib.pyplot as plt
 
     n = len(datasets)
-
     global_min = min(data.min() for data, _, _ in datasets)
     global_max = max(data.max() for data, _, _ in datasets)
     bin_edges = np.linspace(global_min, global_max, bins + 1)
 
+    # Consistent max frequency across all datasets
+    max_freq = max(np.histogram(data, bins=bin_edges)[0].max() for data, _, _ in datasets)
+
     if stack:
         plt.figure(figsize=figsize_per_plot)
-        max_freq = 0
         for data, label, color in datasets:
-            freq, _ = np.histogram(data, bins=bin_edges)
-            max_freq = max(max_freq, freq.max())
             plt.hist(data, bins=bin_edges, alpha=0.5, label=label, color=color)
 
         plt.xlabel(xlabel)
@@ -136,22 +137,16 @@ def plot_histograms(
         plt.title('Stacked Histogram of All Distributions')
         plt.legend()
         plt.xlim(global_min, global_max)
-        plt.ylim(0, max_freq)
+        plt.ylim(0, max_freq * 1.1)
         plt.tight_layout()
         plt.show()
 
     else:
         if cols is None:
             cols = int(np.ceil(n / rows))
-
         fig_width = figsize_per_plot[0] * cols
         fig_height = figsize_per_plot[1] * rows
         plt.figure(figsize=(fig_width, fig_height))
-
-        max_freq = 0
-        for data, _, _ in datasets:
-            freq, _ = np.histogram(data, bins=bin_edges)
-            max_freq = max(max_freq, freq.max())
 
         for i, (data, label, color) in enumerate(datasets):
             plt.subplot(rows, cols, i + 1)
@@ -161,14 +156,14 @@ def plot_histograms(
             plt.title(f'{label} Distribution')
             plt.legend()
             plt.xlim(global_min, global_max)
-            plt.ylim(0, max_freq)
+            plt.ylim(0, max_freq * 1.1)
 
         plt.tight_layout()
         plt.show()
 
 
 def plot_densities(
-    datasets: list[tuple[ArrayLike, str, str]],
+    datasets: list[tuple[np.ndarray, str, str]],
     xlabel: str,
     ylabel: str = 'Density',
     rows: int = 1,
@@ -177,31 +172,34 @@ def plot_densities(
     stack: bool = False,
     bw_adjust: float = 1.0
 ):
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+
     n = len(datasets)
 
-    # Compute global min and max for x-axis
     global_min = min(np.min(data) for data, _, _ in datasets)
     global_max = max(np.max(data) for data, _, _ in datasets)
+
+    # Determine true max y across all KDEs using seaborn
+    max_density = 0
     x_vals = np.linspace(global_min, global_max, 1000)
 
-    # Compute max density using gaussian_kde
-    max_density = 0
     for data, _, _ in datasets:
-        kde = gaussian_kde(data, bw_method=bw_adjust)
-        density = kde(x_vals)
-        max_density = max(max_density, np.max(density))
+        kde_line = sns.kdeplot(data, bw_adjust=bw_adjust).get_lines()[0]
+        y_vals = kde_line.get_ydata()
+        max_density = max(max_density, np.max(y_vals))
+        plt.clf()  # Clear the temp plot
 
-    # Plot stacked or individual
     if stack:
         fig, ax = plt.subplots(figsize=figsize_per_plot)
         for data, label, color in datasets:
             sns.kdeplot(data, fill=True, color=color, label=label, bw_adjust=bw_adjust, ax=ax)
-
         ax.set_xlabel(xlabel)
         ax.set_ylabel(ylabel)
         ax.set_title('Stacked Density Plot of All Distributions')
-        # ax.set_xlim(global_min, global_max)
-        # ax.set_ylim(0, max_density)
+        ax.set_xlim(global_min, global_max)
+        ax.set_ylim(0, max_density * 1.1)
         ax.legend()
         plt.tight_layout()
         plt.show()
@@ -221,7 +219,6 @@ def plot_densities(
             ax.set_ylim(0, max_density * 1.1)
             ax.legend()
 
-        # Hide unused subplots if any
         for i in range(len(datasets), len(axes)):
             fig.delaxes(axes[i])
 
