@@ -14,7 +14,7 @@ import copy
 import json
 import bnlearn as bn
 from collections import defaultdict
-from scipy.stats import norm, gamma, lognorm, norm as normal_dist
+from scipy.stats import norm, gamma, lognorm, norm as normal_dist, gaussian_kde
 from scipy.special import softmax
 from numpy.linalg import cholesky
 import plotly.graph_objects as go
@@ -719,6 +719,7 @@ def nearest_pd(A):
     return A3
 
 
+
 def generate_synthetic_dataset(
     original_data: pd.DataFrame,
     correlation_matrix: pd.DataFrame,
@@ -726,39 +727,57 @@ def generate_synthetic_dataset(
     marginals: dict,
     n_rows: int = 10000,
     conditional_method: str = "quantile",
-    correlation_threshold: float = 0.25
-) -> pd.DataFrame:
+    correlation_threshold: float = 0.25,
+    noise_level: float = 0.0,
+    noise_type: str = "gaussian",  # or 'laplace'
+    edge_strategy: str = "clip",   # or 'random'
+    histogram_jitter: bool = False,
+    sampling_strategy: str = "sorted",
+    chunk_size: int = None
+    ) -> pd.DataFrame:
     """
-    Generate synthetic data using Gaussian copula and empirical marginals.
-    
+    Generate synthetic data using Gaussian copula + empirical marginals.
+    Supports multi-class conditionals and post-copula noise.
+
     Parameters:
-        original_data (pd.DataFrame): The original dataset (to extract categorical values).
-        correlation_matrix (pd.DataFrame): Full correlation matrix (numerical + categorical).
-        categorical_columns (list): List of categorical columns.
-        marginals (dict): Dictionary of distfit-style marginals for numerical variables.
-        n_rows (int): Number of rows to generate.
-        conditional_method (str): 'quantile' or 'softmax' for conditional categoricals.
-        correlation_threshold (float): Threshold for applying correlation logic.
+        original_data: Original dataset (to infer categorical labels).
+        correlation_matrix: Full correlation matrix (numerical + categorical).
+        categorical_columns: List of categorical column names.
+        marginals: Dict mapping numerical columns to their fitted dist details.
+        n_rows: Number of synthetic rows to generate.
+        conditional_method: 'quantile' or 'softmax'.
+        correlation_threshold: Min |correlation| to enforce copula/conditional.
+        noise_level: Std-dev ratio for Gaussian noise after copula (0 = none).
 
     Returns:
         pd.DataFrame: Synthetic dataset.
     """
-
     numeric_cols = [col for col in correlation_matrix.columns if col not in categorical_columns]
-
-    # === 1. Reduce correlation matrix by threshold ===
     reduced_corr = correlation_matrix.loc[numeric_cols, numeric_cols].copy()
     reduced_corr[reduced_corr.abs() < correlation_threshold] = 0.0
 
-    # === 2. Make correlation matrix positive definite if needed ===
+    def nearest_pd(A):
+        B = (A + A.T) / 2
+        _, s, V = np.linalg.svd(B)
+        H = V.T @ np.diag(s) @ V
+        A2 = (B + H) / 2
+        A3 = (A2 + A2.T) / 2
+        spacing = np.spacing(np.linalg.norm(A))
+        I = np.eye(A.shape[0])
+        k = 1
+        while np.min(np.real(np.linalg.eigvals(A3))) < 0:
+            mineig = np.min(np.real(np.linalg.eigvals(A3)))
+            A3 += I * (-mineig * k**2 + spacing)
+            k += 1
+        return A3
+
     corr_array = nearest_pd(reduced_corr.values)
     L = cholesky(corr_array)
     Z = np.random.normal(size=(n_rows, len(numeric_cols)))
     Z_corr = Z @ L.T
 
-    # === 3. Sample marginal distributions empirically ===
-    empirical_samples = {}
-    for col in numeric_cols:
+    df = pd.DataFrame()
+    for i, col in enumerate(numeric_cols):
         info = marginals[col]
         dist = info['name']
         params = info['params']
@@ -773,54 +792,82 @@ def generate_synthetic_dataset(
             raise ValueError(f"Unsupported distribution: {dist}")
 
         minval, maxval = info['range']
-        if info.get('round', False):
-            samples = np.round(np.clip(samples, minval, maxval)).astype(int)
-        else:
-            samples = np.clip(samples, minval, maxval)
 
-        empirical_samples[col] = samples
+        # === Sample empirical values based on strategy ===
+        if sampling_strategy == "kde":
+            kde = gaussian_kde(samples)
+            empirical = kde.resample(n_rows).flatten()
+        elif sampling_strategy == "resample":
+            empirical = np.random.choice(samples, size=n_rows, replace=True)
+        elif sampling_strategy == "local-chunks":
+            if chunk_size is None:
+                chunk_size = max(50, int(n_rows * 0.02))
+            empirical = np.zeros(n_rows)
+            sorted_samples = np.sort(samples)
+            for j in range(0, n_rows, chunk_size):
+                chunk = sorted_samples[j % len(samples): (j % len(samples)) + chunk_size]
+                z_chunk = Z_corr[j:min(j + chunk_size, n_rows), i]
+                ranks = np.argsort(np.argsort(z_chunk))
+                empirical[j:min(j + chunk_size, n_rows)] = np.sort(chunk)[ranks]
+        else:  # "sorted" (default)
+            empirical = np.sort(samples)
 
-    # === 4. Reorder empirical samples by Z_corr rank (copula logic) ===
-    df = pd.DataFrame()
-    for i, col in enumerate(numeric_cols):
-        empirical = np.sort(empirical_samples[col])
+        # === Rank-matching ===
         rank_order = Z_corr[:, i].argsort()
         inverse_order = np.argsort(rank_order)
-        df[col] = empirical[inverse_order]
+        values = empirical[inverse_order]
 
-    # === 5. Generate categorical variables ===
+        # Optional histogram jitter
+        if histogram_jitter:
+            values += 0.01 * np.std(values) * np.sin(np.linspace(0, 12 * np.pi, n_rows))
+
+        # Add optional noise
+        if noise_level > 0:
+            std_dev = np.std(values)
+            noise = (
+                np.random.laplace(0, noise_level * std_dev, size=n_rows)
+                if noise_type == "laplace"
+                else np.random.normal(0, noise_level * std_dev, size=n_rows)
+            )
+            values += noise
+
+        # Handle edge clipping
+        if edge_strategy == "random":
+            out_of_bounds = (values < minval) | (values > maxval)
+            values[out_of_bounds] = np.random.uniform(minval, maxval, size=out_of_bounds.sum())
+        else:
+            values = np.clip(values, minval, maxval)
+
+        if info.get("round", False):
+            values = np.round(values)
+
+        df[col] = values.astype(int if info.get("round", False) else float)
+
+    # === Categorical sampling ===
     for cat_col in categorical_columns:
-        possible_values = original_data[cat_col].dropna().unique()
+        values, counts = np.unique(original_data[cat_col].dropna(), return_counts=True)
+        proportions = counts / counts.sum()
         cat_corrs = correlation_matrix.loc[cat_col, numeric_cols].abs()
         strong_corrs = cat_corrs[cat_corrs >= correlation_threshold]
 
         if not strong_corrs.empty:
-            # Build weighted score from correlated variables
             weights = strong_corrs / strong_corrs.sum()
             score = sum(Z_corr[:, numeric_cols.index(col)] * weight for col, weight in weights.items())
 
-            # Assign category via quantile or softmax logic
             if conditional_method == "quantile":
-                bins = np.quantile(score, [0.33, 0.66])
-                df[cat_col] = [
-                    possible_values[0] if s <= bins[0]
-                    else possible_values[1] if s <= bins[1]
-                    else possible_values[2 % len(possible_values)]
-                    for s in score
-                ]
+                cum_probs = np.cumsum(proportions)
+                bins = np.quantile(score, cum_probs[:-1])
+                df[cat_col] = pd.cut(score, bins=[-np.inf] + list(bins) + [np.inf], labels=values)
             elif conditional_method == "softmax":
+                inv_freq = 1 / proportions
+                logits = (inv_freq - inv_freq.mean()) / inv_freq.std() * 2
                 score_scaled = (score - score.min()) / (score.max() - score.min())
-                probs = softmax(np.vstack([
-                    3 * score_scaled,
-                    3 * (1 - np.abs(score_scaled - 0.5)),
-                    3 * (1 - score_scaled)
-                ]).T, axis=1)
-                df[cat_col] = [np.random.choice(possible_values, p=p[:len(possible_values)]) for p in probs]
+                prob_matrix = softmax(np.outer(score_scaled, logits), axis=1)
+                df[cat_col] = [np.random.choice(values, p=p) for p in prob_matrix]
             else:
                 raise ValueError("Invalid conditional_method: use 'quantile' or 'softmax'")
         else:
-            # No strong correlation — sample randomly from original values
-            df[cat_col] = np.random.choice(possible_values, size=n_rows)
+            df[cat_col] = np.random.choice(values, size=n_rows, p=proportions)
 
     return df
 
