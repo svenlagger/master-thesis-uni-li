@@ -1,5 +1,7 @@
-import pandas as pd
 import os
+os.environ["JULIA_NUM_THREADS"] = "8"  # Use 8 threads (adjust as needed)
+
+import pandas as pd
 from pysr import PySRRegressor
 import numpy as np
 import xgboost as xgb
@@ -13,6 +15,9 @@ from distfit import distfit
 import copy
 import json
 import bnlearn as bn
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel
+from sympy import sympify, lambdify
 
 
 # Define a reusable type alias
@@ -26,8 +31,6 @@ def perform_simple_sr(
         n_iterations: int=128, 
         maxsize: int=40
     ):
-
-    os.environ["JULIA_NUM_THREADS"] = "8"  # Use 8 threads (adjust as needed)
 
     X = dataset[independent_vars].to_numpy()  # Features
     y = dataset[dependent_var].to_numpy()  # Target
@@ -46,6 +49,174 @@ def perform_simple_sr(
     model.fit(X, y)
 
     return model
+
+
+def auto_denoise(
+        X_independent_data: np.ndarray, 
+        y_dependent_data: np.ndarray
+    ):
+    custom_kernel = ConstantKernel(1.0) * RBF() + WhiteKernel()
+    gp = GaussianProcessRegressor(kernel=custom_kernel, n_restarts_optimizer=10)
+    gp.fit(X_independent_data, y_dependent_data)
+    # Generate denoised targets using custom GP.
+    y_denoised_dependent = gp.predict(X_independent_data)
+    return y_denoised_dependent
+
+
+def bound_denoise(
+        X_independent_data: np.ndarray, 
+        y_dependent_data: np.ndarray,
+        length_scale_bounds: str | tuple[float, float] = (1e-3, 30),
+        noise_level_bounds: str | tuple[float, float] = (1e-5, 1e3)
+    ):
+    kernel = (ConstantKernel(1.0, (1e-3, 1e3)) *
+          RBF(length_scale=0.1, length_scale_bounds=length_scale_bounds) +
+          WhiteKernel(noise_level=1.0, noise_level_bounds=noise_level_bounds))
+
+    gp = GaussianProcessRegressor(kernel=kernel, alpha=0.0, n_restarts_optimizer=5)
+    gp.fit(X_independent_data, y_dependent_data)
+    y_denoised_dependent = gp.predict(X_independent_data)
+    return y_denoised_dependent
+
+
+def perform_auto_denoised_sr(
+        dataset: pd.DataFrame, 
+        independent_vars: list, 
+        dependent_var: str, 
+        n_iterations: int=128, 
+        maxsize: int=40
+    ):
+    X = dataset[independent_vars]
+    y = dataset[dependent_var]
+
+    y_denoised = auto_denoise(X, y)
+
+    model = perform_simple_sr(dataset, X, y_denoised, n_iterations, maxsize)
+
+    return model, y_denoised
+
+
+def perform_bound_denoised_sr(
+        dataset: pd.DataFrame, 
+        independent_vars: list, 
+        dependent_var: str, 
+        n_iterations: int=128, 
+        maxsize: int=40,
+        length_scale_bounds: str | tuple[float, float] = (1e-3, 30),
+        noise_level_bounds: str | tuple[float, float] = (1e-5, 1e3)
+    ):
+    X = dataset[independent_vars]
+    y = dataset[dependent_var]
+
+    y_denoised = bound_denoise(X, y, length_scale_bounds, noise_level_bounds)
+
+    model = perform_simple_sr(dataset, X, y_denoised, n_iterations, maxsize)
+
+    return model, y_denoised
+
+
+def generate_candidate_function(selected_eq_str):
+    """
+    Converts a string representation of an equation into a callable function.
+    
+    Parameters:
+    - selected_eq_str (str): The candidate equation as a string, using variables like x0, x1, etc.
+    
+    Returns:
+    - candidate_function (function): A function that takes a NumPy array X and evaluates the equation.
+    """
+    f_sympy = sympify(selected_eq_str)
+    free_syms = sorted(f_sympy.free_symbols, key=lambda s: s.name)
+    f_callable = lambdify(free_syms, f_sympy, 'numpy')
+
+    def candidate_function(X):
+        # Assumes ordering: first free symbol -> first column, etc.
+        if len(free_syms) == 1:
+            return f_callable(X[:, 0])
+        elif len(free_syms) == 2:
+            return f_callable(X[:, 0], X[:, 1])
+        else:
+            args = [X[:, i] for i in range(len(free_syms))]
+            return f_callable(*args)
+    
+    return candidate_function
+
+
+def generate_noise(residuals, method='bootstrap', rng=None):
+    if rng is None:
+        rng = np.random.default_rng()
+
+    if method == 'bootstrap':
+        return rng.choice(residuals, size=len(residuals), replace=True)
+    elif method == 'std':
+        noise_std = np.std(residuals)
+        return rng.normal(0, noise_std, size=len(residuals))
+    else:
+        raise ValueError("Method must be either 'bootstrap' or 'std'.")
+
+
+def compute_renoised_mse(y, y_denoised, residuals, amp, method, bins, use_direct_mse, rng):
+    noise = generate_noise(residuals, method, rng)
+    y_pred = y_denoised + amp * noise
+
+    if use_direct_mse:
+        mse = np.mean((y - y_pred) ** 2)
+    else:
+        hist_y, bin_edges = np.histogram(y, bins=bins, density=True)
+        hist_pred, _ = np.histogram(y_pred, bins=bin_edges, density=True)
+        mse = np.mean((hist_y - hist_pred) ** 2)
+
+    return mse, y_pred
+
+
+def renoise_predictions(
+    y, 
+    y_denoised, 
+    method='bootstrap',         
+    amplification_factor=None,  
+    amplification_grid=np.linspace(0.5, 2.0, 20),
+    bins=30,
+    seed=None,
+    use_direct_mse=False        
+):
+    """
+    Reintroduce noise into denoised predictions using either bootstrap or std-based methods.
+    
+    Parameters:
+    - y: original target values
+    - y_denoised: denoised model predictions
+    - method: 'bootstrap' (resampling residuals) or 'std' (Gaussian with estimated std)
+    - amplification_factor: manually set amplification; if None, grid search is used
+    - amplification_grid: list of amplification factors to try if grid searching
+    - bins: number of histogram bins (used if use_direct_mse=False)
+    - seed: random seed for reproducibility (local only)
+    - use_direct_mse: use direct MSE instead of histogram-based error
+
+    Returns:
+    - y_renoised: final noise-added predictions
+    - best_amp: amplification factor used
+    - errors: list of errors over the amplification grid (or None if not used)
+    """
+    
+    rng = np.random.default_rng(seed)
+    residuals = y - y_denoised
+    errors = []
+    predictions = []
+
+    if amplification_factor is None:
+        for amp in amplification_grid:
+            mse, pred = compute_renoised_mse(y, y_denoised, residuals, amp, method, bins, use_direct_mse, rng)
+            errors.append(mse)
+            predictions.append(pred)
+        best_idx = np.argmin(errors)
+        best_amp = amplification_grid[best_idx]
+        y_renoised = predictions[best_idx]
+    else:
+        best_amp = amplification_factor
+        _, y_renoised = compute_renoised_mse(y, y_denoised, residuals, best_amp, method, bins, use_direct_mse, rng)
+        errors = None
+
+    return y_renoised, best_amp, errors
 
 
 def correct_sr_inference(
