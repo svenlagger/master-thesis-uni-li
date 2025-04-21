@@ -142,67 +142,118 @@ def generate_candidate_function(selected_eq_str):
     return candidate_function
 
 
-def generate_noise(residuals, method='bootstrap', rng=None, y_denoised=None, stratify_bins=10):
+def generate_noise(
+    residuals,
+    method='bootstrap',
+    rng=None,
+    y_denoised=None,
+    stratify_bins=10
+):
     """
-    Generate noise based on the chosen method:
-      - 'bootstrap': resample residuals with replacement
-      - 'std': Gaussian noise with std = np.std(residuals)
-      - 'stratified': stratified bootstrap, requires y_denoised and stratify_bins
+    Generate noise according to the chosen method.
+    
+    - 'bootstrap': simple residual bootstrap from `residuals`.
+    - 'std': Gaussian noise N(0, std(residuals)).
+    - 'stratified': bin-wise bootstrap of `residuals` based on y_denoised.
+    
+    `rng` may be an integer seed or a numpy Generator.
     """
-    if rng is None:
-        rng = np.random.default_rng()
-
+    # Ensure rng is a Generator
+    if not isinstance(rng, np.random.Generator):
+        rng = np.random.default_rng(rng)
+    
+    n = len(residuals)
+    
     if method == 'bootstrap':
-        return rng.choice(residuals, size=len(residuals), replace=True)
-    elif method == 'std':
+        return rng.choice(residuals, size=n, replace=True)
+    
+    if method == 'std':
         noise_std = np.std(residuals)
-        return rng.normal(0, noise_std, size=len(residuals))
-    elif method == 'stratified':
+        return rng.normal(0, noise_std, size=n)
+    
+    if method == 'stratified':
         if y_denoised is None:
             raise ValueError("y_denoised must be provided for stratified sampling")
-        # 1) Build bin edges & assign indices
-        edges = np.quantile(y_denoised, np.linspace(0, 1, stratify_bins + 1))
-        bin_idx = np.digitize(y_denoised, edges[1:-1])  # indices 0..stratify_bins-1
-
+        # 1) Build bins on y_denoised
+        edges = np.quantile(y_denoised, np.linspace(0, 1, stratify_bins+1))
+        bin_idx = np.digitize(y_denoised, edges[1:-1])  # 0..stratify_bins-1
+        
         # 2) Group residuals by bin
-        residuals_by_bin = {
+        res_by_bin = {
             b: residuals[bin_idx == b]
             for b in range(stratify_bins)
         }
-
-        # 3) Sample residuals stratified by bin (fallback to global if empty)
-        noise = np.empty_like(residuals)
-        for i, b in enumerate(bin_idx):
-            pool = residuals_by_bin.get(b)
+        
+        # 3) Sample
+        noise = np.empty(n)
+        for i in range(n):
+            pool = res_by_bin.get(bin_idx[i])
             if pool is None or pool.size == 0:
                 pool = residuals
             noise[i] = rng.choice(pool)
         return noise
-    else:
-        raise ValueError("Method must be 'bootstrap', 'std', or 'stratified'.")
+    
+    raise ValueError("Unknown method: " + method)
 
 
-def compute_renoised_mse(y, y_denoised, residuals, amp, method, hist_bins, stratify_bins, use_direct_mse, rng):
+def compute_renoised_mse(
+    y,
+    y_denoised,
+    residuals,
+    amp,
+    method,
+    bins,
+    use_direct_mse,
+    rng,
+    clip_lower=None,
+    clip_upper=None,
+    tail_replace=False,
+    lower_percentile=25,
+    upper_percentile=75,
+    stratify_bins=10
+):
     """
-    Compute MSE (either direct or histogram-based) for re-noised predictions.
+    Generate one re-noised prediction and its MSE.
     """
-    # Generate noise according to the chosen method
+    # 1) Generate noise
     noise = generate_noise(
         residuals,
-        method,
-        rng,
+        method=method,
+        rng=rng,
         y_denoised=y_denoised,
-        stratify_bins=stratify_bins,
+        stratify_bins=stratify_bins
     )
-    # Apply amplification
+    # 2) Apply amplification
     y_pred = y_denoised + amp * noise
 
+    # 3) Handle out-of-bounds
+    if tail_replace and (clip_lower is not None or clip_upper is not None):
+        # precompute tails from the original y
+        if clip_lower is not None:
+            q_low = np.percentile(y, lower_percentile)
+            lower_pool = y[y <= q_low]
+            mask = y_pred < clip_lower
+            if mask.any() and lower_pool.size:
+                y_pred[mask] = rng.choice(lower_pool, size=mask.sum())
+        if clip_upper is not None:
+            q_high = np.percentile(y, upper_percentile)
+            upper_pool = y[y >= q_high]
+            mask = y_pred > clip_upper
+            if mask.any() and upper_pool.size:
+                y_pred[mask] = rng.choice(upper_pool, size=mask.sum())
+    else:
+        # hard clipping
+        if clip_lower is not None:
+            y_pred = np.maximum(y_pred, clip_lower)
+        if clip_upper is not None:
+            y_pred = np.minimum(y_pred, clip_upper)
+
+    # 4) Compute MSE
     if use_direct_mse:
         mse = np.mean((y - y_pred) ** 2)
     else:
-        # Histogram-based error
-        hist_y, bin_edges = np.histogram(y, bins=hist_bins, density=True)
-        hist_pred, _ = np.histogram(y_pred, bins=bin_edges, density=True)
+        hist_y, edges = np.histogram(y, bins=bins, density=True)
+        hist_pred, _ = np.histogram(y_pred, bins=edges, density=True)
         mse = np.mean((hist_y - hist_pred) ** 2)
 
     return mse, y_pred
@@ -211,72 +262,64 @@ def compute_renoised_mse(y, y_denoised, residuals, amp, method, hist_bins, strat
 def renoise_predictions(
     y,
     y_denoised,
+    original_residuals=None,
     method='bootstrap',
     amplification_factor=None,
     amplification_grid=np.linspace(0.5, 2.0, 20),
-    hist_bins=30,
-    stratify_bins=10,
+    bins=30,
     seed=None,
     use_direct_mse=False,
+    clip_lower=None,
+    clip_upper=None,
+    tail_replace=False,
+    lower_percentile=25,
+    upper_percentile=75,
+    stratify_bins=10
 ):
     """
-    Reintroduce noise into denoised predictions, optionally tuning an amplification factor.
-
-    Parameters:
-    - y: original target array
-    - y_denoised: array of denoised predictions
-    - method: 'bootstrap', 'std', or 'stratified'
-    - amplification_factor: if provided, use this factor; else grid-search over amplification_grid
-    - amplification_grid: list/array of factors to search
-    - hist_bins: number of bins for histogram-based error
-    - stratify_bins: number of bins for stratified bootstrapping (if method='stratified')
-    - seed: random seed for reproducibility
-    - use_direct_mse: if True, compute MSE on raw values; else histogram-MSE
-
+    Reintroduce noise into y_denoised and return the best match to y.
+    
     Returns:
-    - y_renoised: final predictions after noise addition
-    - best_amp: amplification factor used
-    - errors: list of errors (if grid search); else None
+      y_renoised, best_amplification, errors_list, used_residuals
     """
     rng = np.random.default_rng(seed)
-    residuals = y - y_denoised
+    # ** Choose which residuals to use **
+    if original_residuals is None:
+        residuals = y - y_denoised
+    else:
+        residuals = original_residuals
     errors = []
-    predictions = []
+    preds  = []
 
+    # Grid search over amplification if needed
     if amplification_factor is None:
         for amp in amplification_grid:
-            mse, pred = compute_renoised_mse(
-                y,
-                y_denoised,
-                residuals,
-                amp,
-                method,
-                hist_bins,
-                stratify_bins,
-                use_direct_mse,
-                rng,
+            mse, yp = compute_renoised_mse(
+                y, y_denoised, residuals, amp,
+                method, bins, use_direct_mse, rng,
+                clip_lower, clip_upper,
+                tail_replace, lower_percentile, upper_percentile,
+                stratify_bins
             )
             errors.append(mse)
-            predictions.append(pred)
-        best_idx = np.argmin(errors)
+            preds.append(yp)
+        best_idx = int(np.argmin(errors))
         best_amp = amplification_grid[best_idx]
-        y_renoised = predictions[best_idx]
+        y_renoised = preds[best_idx]
     else:
         best_amp = amplification_factor
         _, y_renoised = compute_renoised_mse(
-            y,
-            y_denoised,
-            residuals,
-            best_amp,
-            method,
-            hist_bins,
-            stratify_bins,
-            use_direct_mse,
-            rng,
+            y, y_denoised, residuals, best_amp,
+            method, bins, use_direct_mse, rng,
+            clip_lower, clip_upper,
+            tail_replace, lower_percentile, upper_percentile,
+            stratify_bins
         )
         errors = None
 
-    return y_renoised, best_amp, errors
+    # Return also the residuals used (for your “freeze residuals” experiments)
+    return y_renoised, best_amp, errors, residuals
+
 
 def correct_sr_inference(
         dataset: pd.DataFrame, 
