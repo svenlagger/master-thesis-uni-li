@@ -1,5 +1,7 @@
-import pandas as pd
 import os
+os.environ["JULIA_NUM_THREADS"] = "8"  # Use 8 threads (adjust as needed)
+
+import pandas as pd
 from pysr import PySRRegressor
 import numpy as np
 import xgboost as xgb
@@ -13,6 +15,9 @@ from distfit import distfit
 import copy
 import json
 import bnlearn as bn
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel
+from sympy import sympify, lambdify
 from collections import defaultdict
 from scipy.stats import norm, gamma, lognorm, norm as normal_dist, gaussian_kde
 from scipy.special import softmax
@@ -33,8 +38,6 @@ def perform_simple_sr(
         maxsize: int=40
     ):
 
-    os.environ["JULIA_NUM_THREADS"] = "8"  # Use 8 threads (adjust as needed)
-
     X = dataset[independent_vars].to_numpy()  # Features
     y = dataset[dependent_var].to_numpy()  # Target
 
@@ -52,6 +55,276 @@ def perform_simple_sr(
     model.fit(X, y)
 
     return model
+
+
+def auto_denoise(
+        X_independent_data: np.ndarray, 
+        y_dependent_data: np.ndarray
+    ):
+    custom_kernel = ConstantKernel(1.0) * RBF() + WhiteKernel()
+    gp = GaussianProcessRegressor(kernel=custom_kernel, n_restarts_optimizer=10)
+    gp.fit(X_independent_data, y_dependent_data)
+    # Generate denoised targets using custom GP.
+    y_denoised_dependent = gp.predict(X_independent_data)
+    return y_denoised_dependent
+
+
+def bound_denoise(
+        X_independent_data: np.ndarray, 
+        y_dependent_data: np.ndarray,
+        length_scale_bounds: str | tuple[float, float] = (1e-3, 30),
+        noise_level_bounds: str | tuple[float, float] = (1e-5, 1e3)
+    ):
+    kernel = (ConstantKernel(1.0, (1e-3, 1e3)) *
+          RBF(length_scale=0.1, length_scale_bounds=length_scale_bounds) +
+          WhiteKernel(noise_level=1.0, noise_level_bounds=noise_level_bounds))
+
+    gp = GaussianProcessRegressor(kernel=kernel, alpha=0.0, n_restarts_optimizer=5)
+    gp.fit(X_independent_data, y_dependent_data)
+    y_denoised_dependent = gp.predict(X_independent_data)
+    return y_denoised_dependent
+
+
+def perform_auto_denoised_sr(
+        dataset: pd.DataFrame, 
+        independent_vars: list, 
+        dependent_var: str, 
+        n_iterations: int=128, 
+        maxsize: int=40
+    ):
+    X = dataset[independent_vars]
+    y = dataset[dependent_var]
+
+    y_denoised = auto_denoise(X, y)
+
+    model = perform_simple_sr(dataset, X, y_denoised, n_iterations, maxsize)
+
+    return model, y_denoised
+
+
+def perform_bound_denoised_sr(
+        dataset: pd.DataFrame, 
+        independent_vars: list, 
+        dependent_var: str, 
+        n_iterations: int=128, 
+        maxsize: int=40,
+        length_scale_bounds: str | tuple[float, float] = (1e-3, 30),
+        noise_level_bounds: str | tuple[float, float] = (1e-5, 1e3)
+    ):
+    X = dataset[independent_vars]
+    y = dataset[dependent_var]
+
+    y_denoised = bound_denoise(X, y, length_scale_bounds, noise_level_bounds)
+
+    model = perform_simple_sr(dataset, X, y_denoised, n_iterations, maxsize)
+
+    return model, y_denoised
+
+
+def generate_candidate_function(selected_eq_str):
+    """
+    Converts a string representation of an equation into a callable function.
+    
+    Parameters:
+    - selected_eq_str (str): The candidate equation as a string, using variables like x0, x1, etc.
+    
+    Returns:
+    - candidate_function (function): A function that takes a NumPy array X and evaluates the equation.
+    """
+    f_sympy = sympify(selected_eq_str)
+    free_syms = sorted(f_sympy.free_symbols, key=lambda s: s.name)
+    f_callable = lambdify(free_syms, f_sympy, 'numpy')
+
+    def candidate_function(X):
+        # Assumes ordering: first free symbol -> first column, etc.
+        if len(free_syms) == 1:
+            return f_callable(X[:, 0])
+        elif len(free_syms) == 2:
+            return f_callable(X[:, 0], X[:, 1])
+        else:
+            args = [X[:, i] for i in range(len(free_syms))]
+            return f_callable(*args)
+    
+    return candidate_function
+
+
+def generate_noise(
+    residuals,
+    method='bootstrap',
+    rng=None,
+    y_denoised=None,
+    stratify_bins=10
+):
+    """
+    Generate noise according to the chosen method.
+    
+    - 'bootstrap': simple residual bootstrap from `residuals`.
+    - 'std': Gaussian noise N(0, std(residuals)).
+    - 'stratified': bin-wise bootstrap of `residuals` based on y_denoised.
+    
+    `rng` may be an integer seed or a numpy Generator.
+    """
+    # Ensure rng is a Generator
+    if not isinstance(rng, np.random.Generator):
+        rng = np.random.default_rng(rng)
+    
+    n = len(residuals)
+    
+    if method == 'bootstrap':
+        return rng.choice(residuals, size=n, replace=True)
+    
+    if method == 'std':
+        noise_std = np.std(residuals)
+        return rng.normal(0, noise_std, size=n)
+    
+    if method == 'stratified':
+        if y_denoised is None:
+            raise ValueError("y_denoised must be provided for stratified sampling")
+        # 1) Build bins on y_denoised
+        edges = np.quantile(y_denoised, np.linspace(0, 1, stratify_bins+1))
+        bin_idx = np.digitize(y_denoised, edges[1:-1])  # 0..stratify_bins-1
+        
+        # 2) Group residuals by bin
+        res_by_bin = {
+            b: residuals[bin_idx == b]
+            for b in range(stratify_bins)
+        }
+        
+        # 3) Sample
+        noise = np.empty(n)
+        for i in range(n):
+            pool = res_by_bin.get(bin_idx[i])
+            if pool is None or pool.size == 0:
+                pool = residuals
+            noise[i] = rng.choice(pool)
+        return noise
+    
+    raise ValueError("Unknown method: " + method)
+
+
+def compute_renoised_mse(
+    y,
+    y_denoised,
+    residuals,
+    amp,
+    method,
+    bins,
+    use_direct_mse,
+    rng,
+    clip_lower=None,
+    clip_upper=None,
+    tail_replace=False,
+    lower_percentile=25,
+    upper_percentile=75,
+    stratify_bins=10
+):
+    """
+    Generate one re-noised prediction and its MSE.
+    """
+    # 1) Generate noise
+    noise = generate_noise(
+        residuals,
+        method=method,
+        rng=rng,
+        y_denoised=y_denoised,
+        stratify_bins=stratify_bins
+    )
+    # 2) Apply amplification
+    y_pred = y_denoised + amp * noise
+
+    # 3) Handle out-of-bounds
+    if tail_replace and (clip_lower is not None or clip_upper is not None):
+        # precompute tails from the original y
+        if clip_lower is not None:
+            q_low = np.percentile(y, lower_percentile)
+            lower_pool = y[y <= q_low]
+            mask = y_pred < clip_lower
+            if mask.any() and lower_pool.size:
+                y_pred[mask] = rng.choice(lower_pool, size=mask.sum())
+        if clip_upper is not None:
+            q_high = np.percentile(y, upper_percentile)
+            upper_pool = y[y >= q_high]
+            mask = y_pred > clip_upper
+            if mask.any() and upper_pool.size:
+                y_pred[mask] = rng.choice(upper_pool, size=mask.sum())
+    else:
+        # hard clipping
+        if clip_lower is not None:
+            y_pred = np.maximum(y_pred, clip_lower)
+        if clip_upper is not None:
+            y_pred = np.minimum(y_pred, clip_upper)
+
+    # 4) Compute MSE
+    if use_direct_mse:
+        mse = np.mean((y - y_pred) ** 2)
+    else:
+        hist_y, edges = np.histogram(y, bins=bins, density=True)
+        hist_pred, _ = np.histogram(y_pred, bins=edges, density=True)
+        mse = np.mean((hist_y - hist_pred) ** 2)
+
+    return mse, y_pred
+
+
+def renoise_predictions(
+    y,
+    y_denoised,
+    original_residuals=None,
+    method='bootstrap',
+    amplification_factor=None,
+    amplification_grid=np.linspace(0.5, 2.0, 20),
+    bins=30,
+    seed=None,
+    use_direct_mse=False,
+    clip_lower=None,
+    clip_upper=None,
+    tail_replace=False,
+    lower_percentile=25,
+    upper_percentile=75,
+    stratify_bins=10
+):
+    """
+    Reintroduce noise into y_denoised and return the best match to y.
+    
+    Returns:
+      y_renoised, best_amplification, errors_list, used_residuals
+    """
+    rng = np.random.default_rng(seed)
+    # ** Choose which residuals to use **
+    if original_residuals is None:
+        residuals = y - y_denoised
+    else:
+        residuals = original_residuals
+    errors = []
+    preds  = []
+
+    # Grid search over amplification if needed
+    if amplification_factor is None:
+        for amp in amplification_grid:
+            mse, yp = compute_renoised_mse(
+                y, y_denoised, residuals, amp,
+                method, bins, use_direct_mse, rng,
+                clip_lower, clip_upper,
+                tail_replace, lower_percentile, upper_percentile,
+                stratify_bins
+            )
+            errors.append(mse)
+            preds.append(yp)
+        best_idx = int(np.argmin(errors))
+        best_amp = amplification_grid[best_idx]
+        y_renoised = preds[best_idx]
+    else:
+        best_amp = amplification_factor
+        _, y_renoised = compute_renoised_mse(
+            y, y_denoised, residuals, best_amp,
+            method, bins, use_direct_mse, rng,
+            clip_lower, clip_upper,
+            tail_replace, lower_percentile, upper_percentile,
+            stratify_bins
+        )
+        errors = None
+
+    # Return also the residuals used (for your “freeze residuals” experiments)
+    return y_renoised, best_amp, errors, residuals
 
 
 def correct_sr_inference(
