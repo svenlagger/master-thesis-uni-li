@@ -17,7 +17,8 @@ y = df_sample['Interest_Rate'].to_numpy()  # Target: A
 model = PySRRegressor(
     niterations=512,  # Number of iterations to search for equations
     binary_operators=["+", "-", "*", "/"],
-    unary_operators=["sin", "cos", "exp", "log", "abs", "sqrt"],
+    unary_operators=["log", "abs", "sqrt"],
+    maxdepth=10,
     elementwise_loss="loss(x, y) = (x - y)^2",  # Define loss function (mean squared error)
     verbosity=1,
     maxsize=40

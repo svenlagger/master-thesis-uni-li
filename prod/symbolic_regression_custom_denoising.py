@@ -16,7 +16,8 @@ def perform_simple_sr(
     model = PySRRegressor(
         niterations=n_iterations,
         binary_operators=["+", "-", "*", "/"],
-        unary_operators=["sin", "cos", "exp", "log", "abs", "sqrt"],
+        unary_operators=["log", "abs", "sqrt"],
+        maxdepth=10,
         elementwise_loss="loss(x, y) = (x - y)^2",
         verbosity=1,
         maxsize=maxsize

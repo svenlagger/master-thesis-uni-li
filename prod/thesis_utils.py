@@ -1,8 +1,8 @@
-import os
-os.environ["JULIA_NUM_THREADS"] = "8"  # Use 8 threads (adjust as needed)
+# import os
+# os.environ["JULIA_NUM_THREADS"] = "8"  # Use 8 threads (adjust as needed)
 
 import pandas as pd
-from pysr import PySRRegressor
+# from pysr import PySRRegressor
 import numpy as np
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
@@ -30,31 +30,27 @@ from plotly.subplots import make_subplots
 ArrayLike = Union[list, np.ndarray, pd.Series]
 
 
-def perform_simple_sr(
-        dataset: pd.DataFrame, 
-        independent_vars: list, 
-        dependent_var: str, 
-        n_iterations: int=128, 
-        maxsize: int=40
-    ):
+# def perform_simple_sr( 
+#         independent_vars: np.ndarray, 
+#         dependent_var: np.ndarray, 
+#         n_iterations: int=128, 
+#         maxsize: int=40
+#     ):
 
-    X = dataset[independent_vars].to_numpy()  # Features
-    y = dataset[dependent_var].to_numpy()  # Target
+#     # Use PySR to find the symbolic relationship
+#     model = PySRRegressor(
+#         niterations=n_iterations,  # Number of iterations to search for equations
+#         binary_operators=["+", "-", "*", "/"],
+#         unary_operators=["sin", "cos", "exp", "log", "abs", "sqrt"],
+#         elementwise_loss="loss(x, y) = (x - y)^2",  # Define loss function (mean squared error)
+#         verbosity=1,
+#         maxsize=maxsize
+#     )
 
-    # Use PySR to find the symbolic relationship
-    model = PySRRegressor(
-        niterations=n_iterations,  # Number of iterations to search for equations
-        binary_operators=["+", "-", "*", "/"],
-        unary_operators=["sin", "cos", "exp", "log", "abs", "sqrt"],
-        elementwise_loss="loss(x, y) = (x - y)^2",  # Define loss function (mean squared error)
-        verbosity=1,
-        maxsize=maxsize
-    )
+#     # Fit the model
+#     model.fit(independent_vars, dependent_var)
 
-    # Fit the model
-    model.fit(X, y)
-
-    return model
+#     return model
 
 
 def auto_denoise(
@@ -62,7 +58,7 @@ def auto_denoise(
         y_dependent_data: np.ndarray
     ):
     custom_kernel = ConstantKernel(1.0) * RBF() + WhiteKernel()
-    gp = GaussianProcessRegressor(kernel=custom_kernel, n_restarts_optimizer=10)
+    gp = GaussianProcessRegressor(kernel=custom_kernel, n_restarts_optimizer=5)
     gp.fit(X_independent_data, y_dependent_data)
     # Generate denoised targets using custom GP.
     y_denoised_dependent = gp.predict(X_independent_data)
@@ -73,52 +69,63 @@ def bound_denoise(
         X_independent_data: np.ndarray, 
         y_dependent_data: np.ndarray,
         length_scale_bounds: str | tuple[float, float] = (1e-3, 30),
-        noise_level_bounds: str | tuple[float, float] = (1e-5, 1e3)
+        noise_level_bounds: str | tuple[float, float] = (1e-5, 1e3),
+        show_denoising_effect: bool = False
     ):
-    kernel = (ConstantKernel(1.0, (1e-3, 1e3)) *
+    kernel = (ConstantKernel(1.0) *
           RBF(length_scale=0.1, length_scale_bounds=length_scale_bounds) +
           WhiteKernel(noise_level=1.0, noise_level_bounds=noise_level_bounds))
 
-    gp = GaussianProcessRegressor(kernel=kernel, alpha=0.0, n_restarts_optimizer=5)
+    gp = GaussianProcessRegressor(kernel=kernel, alpha=1e-10, n_restarts_optimizer=1)
     gp.fit(X_independent_data, y_dependent_data)
+    print(gp.kernel_)
     y_denoised_dependent = gp.predict(X_independent_data)
+
+    if show_denoising_effect:
+        plt.figure(figsize=(8,4))
+        plt.scatter(y_dependent_data, y_denoised_dependent, alpha=0.5)
+        plt.xlabel("Original y")
+        plt.ylabel("Denoised y")
+        plt.title("Custom Denoising Effect")
+        plt.show()
+    
     return y_denoised_dependent
 
 
-def perform_auto_denoised_sr(
-        dataset: pd.DataFrame, 
-        independent_vars: list, 
-        dependent_var: str, 
-        n_iterations: int=128, 
-        maxsize: int=40
-    ):
-    X = dataset[independent_vars]
-    y = dataset[dependent_var]
+# def perform_auto_denoised_sr(
+#         dataset: pd.DataFrame, 
+#         independent_vars: list, 
+#         dependent_var: str, 
+#         n_iterations: int=128, 
+#         maxsize: int=40
+#     ):
+#     X = dataset[independent_vars]
+#     y = dataset[dependent_var]
 
-    y_denoised = auto_denoise(X, y)
+#     y_denoised = auto_denoise(X, y)
 
-    model = perform_simple_sr(dataset, X, y_denoised, n_iterations, maxsize)
+#     model = perform_simple_sr(dataset, X, y_denoised, n_iterations, maxsize)
 
-    return model, y_denoised
+#     return model, y_denoised
 
 
-def perform_bound_denoised_sr(
-        dataset: pd.DataFrame, 
-        independent_vars: list, 
-        dependent_var: str, 
-        n_iterations: int=128, 
-        maxsize: int=40,
-        length_scale_bounds: str | tuple[float, float] = (1e-3, 30),
-        noise_level_bounds: str | tuple[float, float] = (1e-5, 1e3)
-    ):
-    X = dataset[independent_vars]
-    y = dataset[dependent_var]
+# def perform_bound_denoised_sr(
+#         dataset: pd.DataFrame, 
+#         independent_vars: list, 
+#         dependent_var: str, 
+#         n_iterations: int=128, 
+#         maxsize: int=40,
+#         length_scale_bounds: str | tuple[float, float] = (1e-3, 30),
+#         noise_level_bounds: str | tuple[float, float] = (1e-5, 1e3)
+#     ):
+#     X = dataset[independent_vars]
+#     y = dataset[dependent_var]
 
-    y_denoised = bound_denoise(X, y, length_scale_bounds, noise_level_bounds)
+#     y_denoised = bound_denoise(X, y, length_scale_bounds, noise_level_bounds)
 
-    model = perform_simple_sr(dataset, X, y_denoised, n_iterations, maxsize)
+#     model = perform_simple_sr(dataset, X, y_denoised, n_iterations, maxsize)
 
-    return model, y_denoised
+#     return model, y_denoised
 
 
 def generate_candidate_function(selected_eq_str):
@@ -395,7 +402,8 @@ def plot_histograms(
     n = len(datasets)
     global_min = min(data.min() for data, _, _ in datasets)
     global_max = max(data.max() for data, _, _ in datasets)
-    bin_edges = np.linspace(global_min, global_max, bins + 1)
+    all_data = np.concatenate([data for data, _, _ in datasets])
+    bin_edges = np.histogram_bin_edges(all_data, bins=bins)
 
     # Consistent max frequency across all datasets
     max_freq = max(np.histogram(data, bins=bin_edges)[0].max() for data, _, _ in datasets)
@@ -1160,7 +1168,7 @@ def plot_correlation_matrices(corr1: pd.DataFrame, corr2: pd.DataFrame, title1: 
     
     features = corr1.columns.tolist()
     
-    fig = make_subplots(rows=1, cols=2, subplot_titles=(title1, title2))
+    fig = make_subplots(rows=1, cols=2, subplot_titles=(title1, title2), horizontal_spacing=0.2, vertical_spacing=0.2)
 
     # First heatmap
     fig.add_trace(
@@ -1196,8 +1204,8 @@ def plot_correlation_matrices(corr1: pd.DataFrame, corr2: pd.DataFrame, title1: 
 
     fig.update_layout(
         title_text="Comparison of Correlation Matrices",
-        height=700,
-        width=1200,
+        height=800,
+        width=1400,
         showlegend=False
     )
 
