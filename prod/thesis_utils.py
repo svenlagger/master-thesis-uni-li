@@ -21,7 +21,7 @@ from sympy import sympify, lambdify
 from collections import defaultdict
 from scipy.stats import norm, gamma, lognorm, norm as normal_dist, gaussian_kde
 from scipy.special import softmax
-from numpy.linalg import cholesky
+from numpy.linalg import cholesky, eigh
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -1001,6 +1001,24 @@ def nearest_pd(A):
 
 
 
+def _make_positive_definite(corr: np.ndarray, eps: float = 1e-8) -> np.ndarray:
+    """
+    Force a symmetric matrix to be positive-definite by eigen-decomposition.
+    Clips negative eigenvalues to 'eps' and re-constructs the matrix with unit diagonal.
+    """
+    # Symmetrize
+    A = (corr + corr.T) / 2
+    # Eigen-decomposition
+    vals, vecs = eigh(A)
+    # Clip eigenvalues
+    vals_clipped = np.clip(vals, a_min=eps, a_max=None)
+    # Reconstruct
+    A_pd = vecs @ np.diag(vals_clipped) @ vecs.T
+    # Enforce exact unit diagonal
+    np.fill_diagonal(A_pd, 1.0)
+    return A_pd
+
+
 def generate_synthetic_dataset(
     original_data: pd.DataFrame,
     correlation_matrix: pd.DataFrame,
@@ -1010,147 +1028,135 @@ def generate_synthetic_dataset(
     conditional_method: str = "quantile",
     correlation_threshold: float = 0.25,
     noise_level: float = 0.0,
-    noise_type: str = "gaussian",  # or 'laplace'
-    edge_strategy: str = "clip",   # or 'random'
+    noise_type: str = "gaussian",
+    edge_strategy: str = "clip",
     histogram_jitter: bool = False,
     sampling_strategy: str = "sorted",
-    chunk_size: int = None
-    ) -> pd.DataFrame:
+    chunk_size: int = None,
+) -> pd.DataFrame:
     """
-    Generate synthetic data using Gaussian copula + empirical marginals.
-    Supports multi-class conditionals and post-copula noise.
-
-    Parameters:
-        original_data: Original dataset (to infer categorical labels).
-        correlation_matrix: Full correlation matrix (numerical + categorical).
-        categorical_columns: List of categorical column names.
-        marginals: Dict mapping numerical columns to their fitted dist details.
-        n_rows: Number of synthetic rows to generate.
-        conditional_method: 'quantile' or 'softmax'.
-        correlation_threshold: Min |correlation| to enforce copula/conditional.
-        noise_level: Std-dev ratio for Gaussian noise after copula (0 = none).
-
-    Returns:
-        pd.DataFrame: Synthetic dataset.
+    Generate synthetic data using a Gaussian copula with empirical marginals.
+    This version ensures the correlation matrix is strictly positive-definite before sampling.
     """
-    numeric_cols = [col for col in correlation_matrix.columns if col not in categorical_columns]
+    # Identify numeric columns
+    numeric_cols = [c for c in correlation_matrix.columns if c not in categorical_columns]
+    # Threshold small correlations
     reduced_corr = correlation_matrix.loc[numeric_cols, numeric_cols].copy()
     reduced_corr[reduced_corr.abs() < correlation_threshold] = 0.0
 
-    def nearest_pd(A):
-        B = (A + A.T) / 2
-        _, s, V = np.linalg.svd(B)
-        H = V.T @ np.diag(s) @ V
-        A2 = (B + H) / 2
-        A3 = (A2 + A2.T) / 2
-        spacing = np.spacing(np.linalg.norm(A))
-        I = np.eye(A.shape[0])
-        k = 1
-        while np.min(np.real(np.linalg.eigvals(A3))) < 0:
-            mineig = np.min(np.real(np.linalg.eigvals(A3)))
-            A3 += I * (-mineig * k**2 + spacing)
-            k += 1
-        return A3
+    # Convert to numpy and enforce PD
+    corr_array = reduced_corr.values
+    corr_array = _make_positive_definite(corr_array)
 
-    corr_array = nearest_pd(reduced_corr.values)
-    L = cholesky(corr_array)
+    # Try Cholesky, with jitter fallback
+    jitter = 0.0
+    while True:
+        try:
+            L = cholesky(corr_array + jitter * np.eye(corr_array.shape[0]))
+            break
+        except np.linalg.LinAlgError:
+            jitter = max(1e-10, (jitter or 1e-8) * 10)
+    
+    # Sample Gaussian copula
     Z = np.random.normal(size=(n_rows, len(numeric_cols)))
     Z_corr = Z @ L.T
 
-    df = pd.DataFrame()
+    # Build DataFrame for numeric variables
+    df_num = pd.DataFrame(index=range(n_rows))
     for i, col in enumerate(numeric_cols):
         info = marginals[col]
-        dist = info['name']
+        dist_name = info['name']
         params = info['params']
 
-        if dist == 'gamma':
-            samples = gamma(a=params['a'], scale=params['scale']).rvs(n_rows) + params.get('loc', 0)
-        elif dist == 'lognorm':
-            samples = lognorm(s=params['s'], scale=params['scale']).rvs(n_rows) + params.get('loc', 0)
-        elif dist == 'norm':
-            samples = normal_dist(loc=params['loc'], scale=params['scale']).rvs(n_rows)
+        # Simulate marginal
+        if dist_name == 'gamma':
+            base = gamma(a=params['a'], scale=params['scale'])
+            samples = base.rvs(n_rows) + params.get('loc', 0)
+        elif dist_name == 'lognorm':
+            base = lognorm(s=params['s'], scale=params['scale'])
+            samples = base.rvs(n_rows) + params.get('loc', 0)
+        elif dist_name == 'norm':
+            base = np.random.normal(loc=params['loc'], scale=params['scale'], size=n_rows)
+            samples = base
         else:
-            raise ValueError(f"Unsupported distribution: {dist}")
+            raise ValueError(f"Unsupported distribution: {dist_name}")
 
         minval, maxval = info['range']
 
-        # === Sample empirical values based on strategy ===
-        if sampling_strategy == "kde":
+        # Sampling strategies
+        if sampling_strategy == 'kde':
             kde = gaussian_kde(samples)
             empirical = kde.resample(n_rows).flatten()
-        elif sampling_strategy == "resample":
+        elif sampling_strategy == 'resample':
             empirical = np.random.choice(samples, size=n_rows, replace=True)
-        elif sampling_strategy == "local-chunks":
+        elif sampling_strategy == 'local-chunks':
             if chunk_size is None:
                 chunk_size = max(50, int(n_rows * 0.02))
+            sorted_samps = np.sort(samples)
             empirical = np.zeros(n_rows)
-            sorted_samples = np.sort(samples)
             for j in range(0, n_rows, chunk_size):
-                chunk = sorted_samples[j % len(samples): (j % len(samples)) + chunk_size]
-                z_chunk = Z_corr[j:min(j + chunk_size, n_rows), i]
+                chunk = sorted_samps[j % len(sorted_samps):][:chunk_size]
+                z_chunk = Z_corr[j:j+chunk_size, i]
                 ranks = np.argsort(np.argsort(z_chunk))
-                empirical[j:min(j + chunk_size, n_rows)] = np.sort(chunk)[ranks]
-        else:  # "sorted" (default)
+                empirical[j:j+chunk_size] = np.sort(chunk)[ranks]
+        else:
             empirical = np.sort(samples)
 
-        # === Rank-matching ===
-        rank_order = Z_corr[:, i].argsort()
-        inverse_order = np.argsort(rank_order)
-        values = empirical[inverse_order]
+        # Rank-match
+        ord_indices = Z_corr[:, i].argsort()
+        inv_ord = np.argsort(ord_indices)
+        values = empirical[inv_ord]
 
-        # Optional histogram jitter
+        # Histogram jitter
         if histogram_jitter:
             values += 0.01 * np.std(values) * np.sin(np.linspace(0, 12 * np.pi, n_rows))
 
-        # Add optional noise
+        # Post-copula noise
         if noise_level > 0:
-            std_dev = np.std(values)
-            noise = (
-                np.random.laplace(0, noise_level * std_dev, size=n_rows)
-                if noise_type == "laplace"
-                else np.random.normal(0, noise_level * std_dev, size=n_rows)
-            )
+            std_val = np.std(values)
+            if noise_type == 'laplace':
+                noise = np.random.laplace(0, noise_level * std_val, n_rows)
+            else:
+                noise = np.random.normal(0, noise_level * std_val, n_rows)
             values += noise
 
-        # Handle edge clipping
-        if edge_strategy == "random":
-            out_of_bounds = (values < minval) | (values > maxval)
-            values[out_of_bounds] = np.random.uniform(minval, maxval, size=out_of_bounds.sum())
+        # Edge handling
+        if edge_strategy == 'random':
+            mask = (values < minval) | (values > maxval)
+            values[mask] = np.random.uniform(minval, maxval, mask.sum())
         else:
             values = np.clip(values, minval, maxval)
 
-        if info.get("round", False):
+        # Rounding
+        if info.get('round', False):
             values = np.round(values)
 
-        df[col] = values.astype(int if info.get("round", False) else float)
+        df_num[col] = values
 
-    # === Categorical sampling ===
-    for cat_col in categorical_columns:
-        values, counts = np.unique(original_data[cat_col].dropna(), return_counts=True)
-        proportions = counts / counts.sum()
-        cat_corrs = correlation_matrix.loc[cat_col, numeric_cols].abs()
-        strong_corrs = cat_corrs[cat_corrs >= correlation_threshold]
-
-        if not strong_corrs.empty:
-            weights = strong_corrs / strong_corrs.sum()
-            score = sum(Z_corr[:, numeric_cols.index(col)] * weight for col, weight in weights.items())
-
-            if conditional_method == "quantile":
-                cum_probs = np.cumsum(proportions)
-                bins = np.quantile(score, cum_probs[:-1])
-                df[cat_col] = pd.cut(score, bins=[-np.inf] + list(bins) + [np.inf], labels=values)
-            elif conditional_method == "softmax":
-                inv_freq = 1 / proportions
-                logits = (inv_freq - inv_freq.mean()) / inv_freq.std() * 2
-                score_scaled = (score - score.min()) / (score.max() - score.min())
-                prob_matrix = softmax(np.outer(score_scaled, logits), axis=1)
-                df[cat_col] = [np.random.choice(values, p=p) for p in prob_matrix]
+    # Sample categorical columns
+    df_cat = pd.DataFrame(index=range(n_rows))
+    for cat in categorical_columns:
+        vals, counts = np.unique(original_data[cat].dropna(), return_counts=True)
+        props = counts / counts.sum()
+        corrs = correlation_matrix.loc[cat, numeric_cols].abs()
+        strong = corrs[corrs >= correlation_threshold]
+        if not strong.empty:
+            weights = strong / strong.sum()
+            score = sum(Z_corr[:, numeric_cols.index(c)] * w for c, w in weights.items())
+            if conditional_method == 'quantile':
+                cum = np.cumsum(props)
+                bins = np.quantile(score, cum[:-1])
+                df_cat[cat] = pd.cut(score, bins=[-np.inf, *bins, np.inf], labels=vals)
             else:
-                raise ValueError("Invalid conditional_method: use 'quantile' or 'softmax'")
+                invf = 1 / props
+                logits = (invf - invf.mean()) / invf.std() * 2
+                s_scaled = (score - score.min()) / (score.max() - score.min())
+                pmat = softmax(np.outer(s_scaled, logits), axis=1)
+                df_cat[cat] = [np.random.choice(vals, p=p) for p in pmat]
         else:
-            df[cat_col] = np.random.choice(values, size=n_rows, p=proportions)
+            df_cat[cat] = np.random.choice(vals, size=n_rows, p=props)
 
-    return df
+    return pd.concat([df_num, df_cat], axis=1)
 
 
 def plot_correlation_matrices(corr1: pd.DataFrame, corr2: pd.DataFrame, title1: str = "Matrix 1", title2: str = "Matrix 2"):
