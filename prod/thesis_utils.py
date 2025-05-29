@@ -159,7 +159,7 @@ def generate_noise(
     residuals,
     method='bootstrap',
     rng=None,
-    y_denoised=None,
+    y_sr=None,
     stratify_bins=10
 ):
     """
@@ -185,11 +185,11 @@ def generate_noise(
         return rng.normal(0, noise_std, size=n)
     
     if method == 'stratified':
-        if y_denoised is None:
+        if y_sr is None:
             raise ValueError("y_denoised must be provided for stratified sampling")
         # 1) Build bins on y_denoised
-        edges = np.quantile(y_denoised, np.linspace(0, 1, stratify_bins+1))
-        bin_idx = np.digitize(y_denoised, edges[1:-1])  # 0..stratify_bins-1
+        edges = np.quantile(y_sr, np.linspace(0, 1, stratify_bins+1))
+        bin_idx = np.digitize(y_sr, edges[1:-1])  # 0..stratify_bins-1
         
         # 2) Group residuals by bin
         res_by_bin = {
@@ -209,9 +209,9 @@ def generate_noise(
     raise ValueError("Unknown method: " + method)
 
 
-def compute_renoised_mse(
+def compute_renoised_error(
     y,
-    y_denoised,
+    y_sr,
     residuals,
     amp,
     method,
@@ -233,11 +233,11 @@ def compute_renoised_mse(
         residuals,
         method=method,
         rng=rng,
-        y_denoised=y_denoised,
+        y_sr=y_sr,
         stratify_bins=stratify_bins
     )
     # 2) Apply amplification
-    y_pred = y_denoised + amp * noise
+    y_pred = y_sr + amp * noise
 
     # 3) Handle out-of-bounds
     if tail_replace and (clip_lower is not None or clip_upper is not None):
@@ -263,18 +263,18 @@ def compute_renoised_mse(
 
     # 4) Compute MSE
     if use_direct_mse:
-        mse = np.mean((y - y_pred) ** 2)
+        error = np.mean((y - y_pred) ** 2)
     else:
         hist_y, edges = np.histogram(y, bins=bins, density=True)
         hist_pred, _ = np.histogram(y_pred, bins=edges, density=True)
-        mse = np.mean((hist_y - hist_pred) ** 2)
+        error = np.mean((hist_y - hist_pred) ** 2)
 
-    return mse, y_pred
+    return error, y_pred
 
 
-def renoise_predictions(
+def correct_predictions(
     y,
-    y_denoised,
+    y_sr,
     original_residuals=None,
     method='bootstrap',
     amplification_factor=None,
@@ -298,7 +298,7 @@ def renoise_predictions(
     rng = np.random.default_rng(seed)
     # ** Choose which residuals to use **
     if original_residuals is None:
-        residuals = y - y_denoised
+        residuals = y - y_sr
     else:
         residuals = original_residuals
     errors = []
@@ -307,22 +307,22 @@ def renoise_predictions(
     # Grid search over amplification if needed
     if amplification_factor is None:
         for amp in amplification_grid:
-            mse, yp = compute_renoised_mse(
-                y, y_denoised, residuals, amp,
+            err, yp = compute_renoised_error(
+                y, y_sr, residuals, amp,
                 method, bins, use_direct_mse, rng,
                 clip_lower, clip_upper,
                 tail_replace, lower_percentile, upper_percentile,
                 stratify_bins
             )
-            errors.append(mse)
+            errors.append(err)
             preds.append(yp)
         best_idx = int(np.argmin(errors))
         best_amp = amplification_grid[best_idx]
         y_renoised = preds[best_idx]
     else:
         best_amp = amplification_factor
-        _, y_renoised = compute_renoised_mse(
-            y, y_denoised, residuals, best_amp,
+        _, y_renoised = compute_renoised_error(
+            y, y_sr, residuals, best_amp,
             method, bins, use_direct_mse, rng,
             clip_lower, clip_upper,
             tail_replace, lower_percentile, upper_percentile,
