@@ -155,7 +155,7 @@ def generate_candidate_function(selected_eq_str):
     return candidate_function
 
 
-def generate_noise(
+def renoise_from_residuals(
     residuals,
     method='bootstrap',
     rng=None,
@@ -229,7 +229,7 @@ def compute_renoised_error(
     Generate one re-noised prediction and its MSE.
     """
     # 1) Generate noise
-    noise = generate_noise(
+    noise = renoise_from_residuals(
         residuals,
         method=method,
         rng=rng,

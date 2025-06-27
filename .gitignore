@@ -3,3 +3,4 @@ profiling
 prod/CTGAN_ydata/credit_score_ctgan_model.pkl
 prod/LLM/iframe_figures
 prod/__pycache__
+legacy/data
