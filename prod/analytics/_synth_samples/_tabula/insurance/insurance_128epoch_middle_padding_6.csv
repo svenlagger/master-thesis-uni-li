@@ -1,0 +1,1339 @@
+age,sex,bmi,children,smoker,region,charges
+34.0,female,30.21,1.0,yes,northwest ,43943.8761
+24.0,female,33.345,0.0,no,northwest ,2855.43755
+38.0,male,19.95,1.0,no,northwest ,5855.9025
+59.0,female,36.765,1.0,yes,northeast,47896.79135
+39.0,male,42.655,0.0,no,northeast,5757.41345
+36.0,male,28.025,1.0,yes,northeast,20773.62775
+18.0,female,40.185,0.0,no,northeast,2217.46915
+18.0,male,39.14,0.0,no,northeast,12890.05765
+19.0,male,30.59,0.0,no,northwest ,1639.5631
+40.0,male,26.315,1.0,no,northwest ,6389.37785
+63.0,male,33.1,0.0,no,southwest ,13393.756
+56.0,female,33.82,2.0,no,northwest ,12643.3778
+46.0,female,48.07,2.0,no,northeast,9432.9253
+28.0,male,23.8,2.0,no,southwest ,3847.674
+63.0,male,41.325,3.0,no,northwest ,15555.18875
+18.0,male,34.43,0.0,no,southeast ,1137.4697
+18.0,female,23.085,0.0,no,northeast,2196.4732
+28.0,male,33.0,3.0,no,southeast ,4449.462
+20.0,female,31.46,0.0,no,southeast ,1877.9294
+51.0,female,37.73,1.0,no,southeast ,9877.6077
+18.0,male,25.175,0.0,yes,northeast,15518.18025
+49.0,female,33.345,2.0,no,northeast,10370.91255
+49.0,male,25.84,2.0,yes,northwest ,23807.2406
+58.0,female,32.395,1.0,no,northeast,13019.16105
+29.0,female,38.83,3.0,no,southeast ,5138.2567
+42.0,male,26.315,1.0,no,northwest ,6940.90985
+38.0,female,27.6,0.0,no,southwest ,5383.536
+28.0,male,37.1,1.0,no,southwest ,3277.161
+56.0,male,33.66,4.0,no,southeast ,12949.1554
+28.0,male,33.82,0.0,no,northwest ,19673.33573
+59.0,male,29.7,2.0,no,southeast ,12925.886
+23.0,male,32.7,3.0,no,southwest ,3591.48
+41.0,female,37.1,2.0,no,southwest ,7371.772
+21.0,female,34.6,0.0,no,southwest ,2020.177
+27.0,male,32.585,3.0,no,northeast,4846.92015
+21.0,female,22.135,0.0,no,northeast,2585.85065
+36.0,female,26.2,0.0,no,southwest ,4883.866
+34.0,female,27.72,0.0,no,southeast ,4415.1588
+28.0,male,33.82,0.0,no,northwest ,19673.33573
+54.0,female,24.605,3.0,no,northwest ,12479.70895
+24.0,female,33.99,0.0,no,southeast ,2473.3341
+48.0,female,33.11,0.0,yes,southeast ,40974.1649
+18.0,female,30.305,0.0,no,northeast,2203.73595
+62.0,male,32.11,0.0,no,northeast,13555.0049
+31.0,male,28.5,5.0,no,northeast,6799.458
+25.0,female,41.325,0.0,no,northeast,17878.90068
+29.0,male,22.515,3.0,no,northeast,5209.57885
+37.0,male,30.8,0.0,no,southwest ,4646.759
+34.0,male,25.3,2.0,yes,southeast ,18972.495
+43.0,male,35.97,3.0,yes,southeast ,42124.5153
+53.0,female,38.06,3.0,no,southeast ,20462.99766
+20.0,male,28.025,1.0,yes,northwest ,17560.37975
+46.0,female,30.8,3.0,no,southwest ,9414.92
+19.0,female,37.43,0.0,no,northwest ,2138.0707
+64.0,male,26.41,0.0,no,northeast,14394.5579
+52.0,male,36.7,0.0,no,southwest ,9144.565
+36.0,female,29.92,0.0,no,southeast ,4889.0368
+58.0,male,35.7,0.0,no,southwest ,11362.755
+22.0,male,28.31,1.0,no,northwest ,2639.0429
+58.0,female,33.44,0.0,no,northwest ,12231.6136
+21.0,female,22.135,0.0,no,northeast,2585.85065
+19.0,female,28.9,0.0,no,southwest ,1743.214
+19.0,male,27.7,0.0,yes,southwest ,16297.846
+42.0,female,33.155,1.0,no,northeast,7639.41745
+55.0,male,21.5,1.0,no,southwest ,10791.96
+30.0,female,33.33,1.0,no,southeast ,4151.0287
+64.0,male,37.905,0.0,no,northwest ,14210.53595
+56.0,male,22.1,0.0,no,southwest ,10577.087
+33.0,male,42.4,5.0,no,southwest ,6666.243
+26.0,male,20.8,0.0,no,southwest ,2302.3
+55.0,male,33.88,3.0,no,southeast ,11987.1682
+34.0,male,21.375,0.0,no,northeast,4500.33925
+41.0,male,30.78,3.0,yes,northeast,39597.4072
+42.0,female,26.6,0.0,yes,northwest ,21348.706
+51.0,male,39.7,1.0,no,southwest ,9391.346
+18.0,female,32.12,2.0,no,southeast ,2801.2588
+22.0,female,30.4,0.0,yes,northwest ,33907.548
+54.0,male,39.6,1.0,no,southwest ,10450.552
+40.0,male,41.69,0.0,no,southeast ,5438.7491
+58.0,male,30.305,0.0,no,northeast,11938.25595
+52.0,female,24.13,1.0,yes,northwest ,23887.6627
+41.0,female,31.635,1.0,no,northeast,7358.17565
+44.0,male,39.52,0.0,no,northwest ,6948.7008
+18.0,male,23.085,0.0,no,northeast,1704.70015
+28.0,male,33.82,0.0,no,northwest ,19673.33573
+60.0,male,28.9,0.0,no,southwest ,12146.971
+51.0,male,39.7,1.0,no,southwest ,9391.346
+37.0,female,34.8,2.0,yes,southwest ,39836.519
+34.0,male,32.8,1.0,no,southwest ,14358.36437
+20.0,male,33.33,0.0,no,southeast ,1391.5287
+51.0,female,37.05,3.0,yes,northeast,46255.1125
+44.0,female,27.645,0.0,no,northwest ,7421.19455
+45.0,female,27.83,2.0,no,southeast ,8515.7587
+38.0,male,38.39,3.0,yes,southeast ,41949.2441
+53.0,female,33.25,0.0,no,northeast,10564.8845
+23.0,female,23.18,2.0,no,northwest ,14426.07385
+38.0,male,19.3,0.0,yes,southwest ,15820.699
+45.0,female,25.175,2.0,no,northeast,9095.06825
+44.0,female,25.0,1.0,no,southwest ,7623.518
+61.0,male,23.655,0.0,no,northeast,13129.60345
+37.0,male,29.83,2.0,no,northeast,6406.4107
+34.0,male,42.13,2.0,no,southeast ,5124.1887
+25.0,male,45.54,2.0,yes,southeast ,42112.2356
+26.0,female,29.92,2.0,no,southeast ,3981.9768
+60.0,male,28.595,0.0,no,northeast,30259.99556
+59.0,female,23.655,0.0,yes,northwest ,25678.77845
+53.0,female,22.88,1.0,yes,southeast ,23244.7902
+28.0,male,23.8,2.0,no,southwest ,3847.674
+44.0,female,29.81,2.0,no,southeast ,8219.2039
+64.0,male,34.5,0.0,no,southwest ,13822.803
+41.0,female,37.1,2.0,no,southwest ,7371.772
+38.0,male,27.835,2.0,no,northwest ,6455.86265
+50.0,male,26.6,0.0,no,southwest ,8444.474
+29.0,male,28.975,1.0,no,northeast,4040.55825
+18.0,male,34.1,0.0,no,southeast ,1137.011
+30.0,female,43.12,2.0,no,southeast ,4753.6368
+64.0,male,34.5,0.0,no,southwest ,13822.803
+23.0,male,18.715,0.0,no,northwest ,21595.38229
+22.0,male,52.58,1.0,yes,southeast ,44501.3982
+50.0,female,23.54,2.0,no,southeast ,10107.2206
+43.0,female,34.4,3.0,no,southwest ,8522.003
+41.0,female,37.1,2.0,no,southwest ,7371.772
+47.0,female,26.125,1.0,yes,northeast,23401.30575
+46.0,male,33.44,1.0,no,northeast,8334.5896
+61.0,male,35.86,0.0,yes,southeast ,46599.1084
+39.0,female,34.1,3.0,no,southwest ,7418.522
+57.0,female,38.0,2.0,no,southwest ,12646.207
+36.0,female,26.885,0.0,no,northwest ,5267.81815
+28.0,female,33.11,0.0,no,southeast ,3171.6149
+61.0,male,23.655,0.0,no,northeast,13129.60345
+18.0,male,21.78,2.0,no,southeast ,11884.04858
+51.0,female,34.1,0.0,no,southeast ,9283.562
+54.0,male,25.46,1.0,no,northeast,25517.11363
+46.0,male,39.425,1.0,no,northeast,8342.90875
+46.0,female,19.95,2.0,no,northwest ,9193.8385
+57.0,male,40.945,0.0,no,northeast,11566.30055
+41.0,male,32.2,2.0,no,southwest ,6875.961
+55.0,male,35.245,1.0,no,northeast,11394.06555
+37.0,male,22.705,3.0,no,northeast,6985.50695
+31.0,male,28.595,1.0,no,northwest ,4243.59005
+36.0,male,41.895,3.0,yes,northeast,43753.33705
+18.0,male,23.75,0.0,no,northeast,1705.6245
+24.0,male,29.3,0.0,no,southwest ,1977.815
+39.0,male,29.6,4.0,no,southwest ,7512.267
+30.0,female,30.9,3.0,no,southwest ,5325.651
+32.0,female,24.6,0.0,yes,southwest ,17496.306
+58.0,male,35.7,0.0,no,southwest ,11362.755
+63.0,female,26.22,0.0,no,northwest ,14256.1928
+50.0,female,28.12,3.0,no,northwest ,11085.5868
+32.0,male,28.93,1.0,yes,southeast ,19719.6947
+35.0,female,34.8,1.0,no,southwest ,5246.047
+45.0,male,30.36,0.0,yes,southeast ,62592.87309
+57.0,male,40.945,0.0,no,northeast,11566.30055
+60.0,male,24.32,0.0,no,northwest ,12523.6048
+28.0,female,17.29,0.0,no,northeast,3732.6251
+64.0,male,40.48,0.0,no,southeast ,13831.1152
+47.0,female,36.63,1.0,yes,southeast ,42969.8527
+36.0,male,33.4,2.0,yes,southwest ,38415.474
+47.0,female,29.545,1.0,no,northwest ,8930.93455
+56.0,female,28.785,0.0,no,northeast,11658.37915
+18.0,male,27.36,1.0,yes,northeast,17178.6824
+56.0,male,22.1,0.0,no,southwest ,10577.087
+54.0,male,40.565,3.0,yes,northeast,48549.17835
+56.0,female,41.91,0.0,no,southeast ,11093.6229
+61.0,female,44.0,0.0,no,southwest ,13063.883
+18.0,female,38.28,0.0,no,southeast ,14133.03775
+19.0,female,28.9,0.0,no,southwest ,1743.214
+33.0,female,33.5,0.0,yes,southwest ,37079.372
+50.0,male,30.97,3.0,no,northwest ,10600.5483
+54.0,female,47.41,0.0,yes,southeast ,63770.42801
+36.0,female,22.6,2.0,yes,southwest ,18608.262
+18.0,female,27.28,3.0,yes,southeast ,18223.4512
+47.0,female,29.545,1.0,no,northwest ,8930.93455
+38.0,female,40.15,0.0,no,southeast ,5400.9805
+58.0,male,36.08,0.0,no,southeast ,11363.2832
+22.0,female,30.4,0.0,no,northeast,2741.948
+57.0,female,28.785,4.0,no,northeast,14394.39815
+59.0,male,29.7,2.0,no,southeast ,12925.886
+29.0,female,21.85,0.0,yes,northeast,16115.3045
+18.0,male,21.565,0.0,yes,northeast,13747.87235
+24.0,male,29.83,0.0,yes,northeast,18648.4217
+63.0,male,28.31,0.0,no,northwest ,13770.0979
+47.0,female,36.63,1.0,yes,southeast ,42969.8527
+34.0,male,32.8,1.0,no,southwest ,14358.36437
+50.0,female,27.075,1.0,no,northeast,10106.13425
+36.0,female,25.84,0.0,no,northwest ,5266.3656
+55.0,female,25.365,3.0,no,northeast,13047.33235
+18.0,female,30.115,0.0,no,northeast,21344.8467
+45.0,male,22.895,2.0,yes,northwest ,21098.55405
+25.0,male,28.595,0.0,no,northeast,3213.62205
+22.0,female,28.82,0.0,no,southeast ,2156.7518
+41.0,female,32.6,3.0,no,southwest ,7954.517
+36.0,male,33.82,1.0,no,northwest ,5377.4578
+20.0,male,40.47,0.0,no,northeast,1984.4533
+47.0,male,38.94,2.0,yes,southeast ,44202.6536
+23.0,male,41.91,0.0,no,southeast ,1837.2819
+37.0,female,29.5,2.0,no,southwest ,6311.952
+25.0,male,26.8,3.0,no,southwest ,3906.127
+64.0,male,26.41,0.0,no,northeast,14394.5579
+20.0,male,30.685,0.0,yes,northeast,33475.81715
+51.0,male,24.795,2.0,yes,northwest ,23967.38305
+58.0,male,23.3,0.0,no,southwest ,11345.519
+31.0,female,25.8,2.0,no,southwest ,4934.705
+38.0,male,31.0,1.0,no,southwest ,5488.262
+62.0,female,32.68,0.0,no,northwest ,13844.7972
+23.0,male,23.845,0.0,no,northeast,2395.17155
+35.0,female,26.125,0.0,no,northeast,5227.98875
+48.0,male,40.15,0.0,no,southeast ,7804.1605
+18.0,male,31.73,0.0,yes,northeast,33732.6867
+19.0,female,28.4,1.0,no,southwest ,2331.519
+19.0,male,25.555,1.0,no,northwest ,2221.56445
+59.0,male,29.83,3.0,yes,northeast,30184.9367
+48.0,male,30.78,3.0,no,northeast,10141.1362
+35.0,male,27.1,1.0,no,southwest ,4746.344
+43.0,male,27.8,0.0,yes,southwest ,37829.7242
+38.0,female,28.93,1.0,no,southeast ,5974.3847
+27.0,female,21.47,0.0,no,northwest ,3353.4703
+48.0,male,29.6,0.0,no,southwest ,21232.18226
+30.0,male,37.43,3.0,no,northeast,5428.7277
+41.0,female,21.755,1.0,no,northeast,13725.47184
+31.0,female,31.065,0.0,no,northeast,4347.02335
+28.0,female,27.5,2.0,no,southwest ,20177.67113
+39.0,female,22.8,3.0,no,northeast,7985.815
+27.0,female,20.045,3.0,yes,northwest ,16420.49455
+18.0,female,33.88,0.0,no,southeast ,11482.63485
+44.0,male,34.32,1.0,no,southeast ,7147.4728
+52.0,female,24.13,1.0,yes,northwest ,23887.6627
+29.0,female,21.755,1.0,yes,northeast,16657.71745
+42.0,male,26.9,0.0,no,southwest ,5969.723
+58.0,male,36.955,2.0,yes,northwest ,47496.49445
+25.0,male,25.84,1.0,no,northeast,3309.7926
+38.0,male,38.39,3.0,yes,southeast ,41949.2441
+29.0,female,25.6,4.0,no,southwest ,5708.867
+61.0,female,28.2,0.0,no,southwest ,13041.921
+19.0,female,37.43,0.0,no,northwest ,2138.0707
+21.0,female,21.89,2.0,no,southeast ,3180.5101
+51.0,male,27.74,1.0,no,northeast,9957.7216
+42.0,male,35.97,2.0,no,southeast ,7160.3303
+47.0,male,19.19,1.0,no,northeast,8627.5411
+56.0,female,28.785,0.0,no,northeast,11658.37915
+52.0,male,38.6,2.0,no,southwest ,10325.206
+59.0,female,32.1,3.0,no,southwest ,14007.222
+46.0,male,27.6,0.0,no,southwest ,24603.04837
+56.0,female,28.31,0.0,no,northeast,11657.7189
+19.0,male,20.425,0.0,no,northwest ,1625.43375
+58.0,female,22.77,0.0,no,southeast ,11833.7823
+53.0,male,31.16,1.0,no,northwest ,10461.9794
+56.0,male,32.11,1.0,no,northeast,11763.0009
+35.0,female,31.0,1.0,no,southwest ,5240.765
+35.0,male,34.77,2.0,no,northwest ,5729.0053
+60.0,female,18.335,0.0,no,northeast,13204.28565
+41.0,male,33.55,0.0,no,southeast ,5699.8375
+34.0,male,27.835,1.0,yes,northwest ,20009.63365
+18.0,male,31.73,0.0,yes,northeast,33732.6867
+50.0,female,27.83,3.0,no,southeast ,19749.38338
+43.0,female,26.7,2.0,yes,southwest ,22478.6
+57.0,male,40.28,0.0,no,northeast,20709.02034
+53.0,female,22.61,3.0,yes,northeast,24873.3849
+19.0,male,27.835,0.0,no,northwest ,1635.73365
+48.0,male,40.15,0.0,no,southeast ,7804.1605
+18.0,female,42.24,0.0,yes,southeast ,38792.6856
+32.0,female,29.8,2.0,no,southwest ,5152.134
+41.0,male,34.2,2.0,no,northwest ,7261.741
+20.0,male,30.685,0.0,yes,northeast,33475.81715
+33.0,female,19.095,2.0,yes,northeast,16776.30405
+34.0,male,34.675,0.0,no,northeast,4518.82625
+60.0,female,25.84,0.0,no,northwest ,28923.13692
+56.0,male,26.695,1.0,yes,northwest ,26109.32905
+56.0,male,33.66,4.0,no,southeast ,12949.1554
+36.0,male,33.82,1.0,no,northwest ,5377.4578
+52.0,male,34.1,0.0,no,southeast ,9140.951
+43.0,female,34.58,1.0,no,northwest ,7727.2532
+37.0,female,30.78,0.0,yes,northeast,37270.1512
+42.0,male,26.315,1.0,no,northwest ,6940.90985
+57.0,female,28.785,4.0,no,northeast,14394.39815
+59.0,female,27.72,3.0,no,southeast ,14001.1338
+33.0,female,38.9,3.0,no,southwest ,5972.378
+30.0,female,19.95,3.0,no,northwest ,5693.4305
+57.0,female,28.785,4.0,no,northeast,14394.39815
+55.0,male,32.775,0.0,no,northwest ,10601.63225
+40.0,male,32.775,1.0,yes,northeast,39125.33225
+61.0,male,36.3,1.0,yes,southwest ,47403.88
+53.0,male,32.3,2.0,no,northwest ,11286.421
+30.0,female,21.945,1.0,no,northeast,4718.20355
+48.0,female,32.3,2.0,no,northeast,10043.249
+45.0,female,31.79,0.0,no,southeast ,17929.30337
+54.0,male,39.6,1.0,no,southwest ,10450.552
+28.0,male,31.68,0.0,yes,southeast ,34672.1472
+64.0,female,31.3,2.0,yes,southwest ,47291.055
+22.0,female,23.18,0.0,no,northeast,2731.9122
+32.0,male,35.2,2.0,no,southwest ,4670.64
+22.0,female,31.02,3.0,yes,southeast ,35595.5898
+40.0,female,29.6,0.0,no,southwest ,5910.944
+57.0,male,23.7,0.0,no,southwest ,10959.33
+54.0,male,30.02,0.0,no,northwest ,24476.47851
+46.0,male,33.345,1.0,no,northeast,8334.45755
+18.0,female,24.09,1.0,no,southeast ,2201.0971
+56.0,female,41.91,0.0,no,southeast ,11093.6229
+45.0,male,21.375,0.0,no,northwest ,7222.78625
+44.0,female,26.41,0.0,no,northwest ,7419.4779
+29.0,female,27.94,1.0,yes,southeast ,19107.7796
+18.0,male,25.175,0.0,yes,northeast,15518.18025
+39.0,female,34.32,5.0,no,southeast ,8596.8278
+34.0,male,27.0,2.0,no,southwest ,11737.84884
+47.0,female,24.1,1.0,no,southwest ,26236.57997
+28.0,female,27.5,2.0,no,southwest ,20177.67113
+28.0,male,37.1,1.0,no,southwest ,3277.161
+29.0,female,21.85,0.0,yes,northeast,16115.3045
+22.0,male,31.73,0.0,no,northeast,2254.7967
+47.0,female,23.6,1.0,no,southwest ,8539.671
+19.0,female,39.615,1.0,no,northwest ,2730.10785
+44.0,male,21.85,3.0,no,northeast,8891.1395
+39.0,male,28.3,1.0,yes,southwest ,21082.16
+35.0,female,34.8,1.0,no,southwest ,5246.047
+43.0,male,32.6,2.0,no,southwest ,7441.501
+25.0,female,32.23,1.0,no,southeast ,18218.16139
+21.0,male,25.7,4.0,yes,southwest ,17942.106
+43.0,female,26.885,0.0,yes,northwest ,21774.32215
+31.0,female,38.095,1.0,yes,northeast,58571.07448
+26.0,female,29.64,4.0,no,northeast,24671.66334
+35.0,female,34.105,3.0,yes,northwest ,39983.42595
+28.0,male,22.515,2.0,no,northeast,4428.88785
+26.0,male,30.875,2.0,no,northwest ,3877.30425
+56.0,female,28.595,0.0,no,northeast,11658.11505
+35.0,male,28.9,3.0,no,southwest ,5926.846
+46.0,female,27.72,1.0,no,southeast ,8232.6388
+58.0,male,35.7,0.0,no,southwest ,11362.755
+43.0,male,23.2,0.0,no,southwest ,6250.435
+28.0,female,33.11,0.0,no,southeast ,3171.6149
+34.0,male,25.3,2.0,yes,southeast ,18972.495
+50.0,male,32.3,1.0,yes,northeast,41919.097
+64.0,male,23.76,0.0,yes,southeast ,26926.5144
+40.0,male,32.3,2.0,no,northwest ,6986.697
+38.0,female,37.73,0.0,no,southeast ,5397.6167
+28.0,male,31.68,0.0,yes,southeast ,34672.1472
+28.0,male,33.82,0.0,no,northwest ,19673.33573
+20.0,male,39.4,2.0,yes,southwest ,38344.566
+50.0,female,27.075,1.0,no,northeast,10106.13425
+18.0,female,40.185,0.0,no,northeast,2217.46915
+19.0,female,27.93,3.0,no,northwest ,18838.70366
+28.0,female,25.8,0.0,no,southwest ,3161.454
+57.0,male,18.335,0.0,no,northeast,11534.87265
+42.0,male,35.97,2.0,no,southeast ,7160.3303
+49.0,male,25.84,2.0,yes,northwest ,23807.2406
+19.0,female,30.02,0.0,yes,northwest ,33307.5508
+19.0,male,20.425,0.0,no,northwest ,1625.43375
+59.0,female,35.2,0.0,no,southeast ,12244.531
+49.0,female,21.3,1.0,no,southwest ,9182.17
+18.0,male,21.47,0.0,no,northeast,1702.4553
+18.0,female,33.155,0.0,no,northeast,2207.69745
+30.0,male,24.13,1.0,no,northwest ,4032.2407
+53.0,female,26.7,2.0,no,southwest ,11150.78
+47.0,male,47.52,1.0,no,southeast ,8083.9198
+29.0,female,38.83,3.0,no,southeast ,5138.2567
+38.0,female,27.835,2.0,no,northeast,7144.86265
+64.0,male,36.96,2.0,yes,southeast ,49577.6624
+34.0,male,42.13,2.0,no,southeast ,5124.1887
+33.0,male,24.795,0.0,yes,northeast,17904.52705
+50.0,female,46.09,1.0,no,southeast ,9549.5651
+29.0,male,27.94,0.0,no,southeast ,2867.1196
+19.0,male,20.3,0.0,no,southwest ,1242.26
+63.0,female,25.08,0.0,no,northwest ,14254.6082
+27.0,female,30.59,1.0,no,northeast,16796.41194
+26.0,female,29.92,1.0,no,southeast ,3392.9768
+64.0,female,26.885,0.0,yes,northwest ,29330.98315
+58.0,male,49.06,0.0,no,southeast ,11381.3254
+40.0,female,41.42,1.0,no,northwest ,28476.73499
+20.0,female,29.6,0.0,no,southwest ,1875.344
+23.0,male,24.51,0.0,no,northeast,2396.0959
+50.0,female,44.745,0.0,no,northeast,9541.69555
+44.0,female,36.48,0.0,no,northeast,12797.20962
+46.0,male,25.745,3.0,no,northwest ,9301.89355
+39.0,female,18.3,5.0,yes,southwest ,19023.26
+30.0,female,22.895,1.0,no,northeast,4719.52405
+38.0,male,31.0,1.0,no,southwest ,5488.262
+42.0,female,37.9,0.0,no,southwest ,6474.013
+49.0,female,36.63,3.0,no,southeast ,10381.4787
+35.0,female,23.465,2.0,no,northeast,6402.29135
+29.0,male,28.975,1.0,no,northeast,4040.55825
+45.0,female,25.7,3.0,no,southwest ,9101.798
+45.0,female,36.3,2.0,no,southeast ,8527.532
+22.0,male,31.35,1.0,no,northwest ,2643.2685
+58.0,male,25.175,0.0,no,northeast,11931.12525
+37.0,male,30.8,0.0,no,southwest ,4646.759
+25.0,male,27.55,0.0,no,northwest ,2523.1695
+58.0,female,32.965,0.0,no,northeast,12430.95335
+36.0,female,29.04,4.0,no,southeast ,7243.8136
+52.0,female,38.38,2.0,no,northeast,11396.9002
+32.0,female,29.8,2.0,no,southwest ,5152.134
+24.0,female,27.72,0.0,no,southeast ,2464.6188
+20.0,female,31.92,0.0,no,northwest ,2261.5688
+19.0,male,20.425,0.0,no,northwest ,1625.43375
+19.0,female,36.575,0.0,no,northwest ,2136.88225
+45.0,male,27.5,3.0,no,southwest ,8615.3
+25.0,male,25.84,1.0,no,northeast,3309.7926
+54.0,female,46.7,2.0,no,southwest ,11538.421
+36.0,male,33.82,1.0,no,northwest ,5377.4578
+23.0,female,24.225,2.0,no,northeast,22395.74424
+40.0,female,29.81,1.0,no,southeast ,6500.2359
+53.0,male,26.41,2.0,no,northeast,11244.3769
+37.0,female,30.78,0.0,yes,northeast,37270.1512
+25.0,male,26.695,4.0,no,northwest ,4877.98105
+59.0,female,36.765,1.0,yes,northeast,47896.79135
+57.0,male,28.975,0.0,yes,northeast,27218.43725
+28.0,female,33.0,2.0,no,southeast ,4349.462
+42.0,female,25.3,1.0,no,southwest ,7045.499
+18.0,female,38.665,2.0,no,northeast,3393.35635
+26.0,female,34.2,2.0,no,southwest ,3987.926
+20.0,male,33.0,1.0,no,southwest ,1980.07
+25.0,male,24.13,0.0,yes,northwest ,15817.9857
+56.0,female,39.82,0.0,no,southeast ,11090.7178
+18.0,female,38.28,0.0,no,southeast ,1631.8212
+63.0,female,31.8,0.0,no,southwest ,13880.949
+41.0,male,37.05,2.0,no,northwest ,7265.7025
+25.0,male,29.7,3.0,yes,southwest ,19933.458
+19.0,female,30.02,0.0,yes,northwest ,33307.5508
+62.0,female,29.92,0.0,no,southeast ,13457.9608
+54.0,female,28.88,2.0,no,northeast,12096.6512
+49.0,male,25.84,2.0,yes,northwest ,23807.2406
+31.0,female,38.095,1.0,yes,northeast,58571.07448
+43.0,female,30.685,2.0,no,northwest ,8310.83915
+50.0,male,32.3,1.0,yes,northeast,41919.097
+24.0,male,28.5,2.0,no,northwest ,3537.703
+60.0,male,24.32,0.0,no,northwest ,12523.6048
+59.0,male,24.7,0.0,no,northeast,12323.936
+50.0,female,28.16,3.0,no,southeast ,10702.6424
+52.0,female,37.525,2.0,no,northwest ,33471.97189
+32.0,female,29.8,2.0,no,southwest ,5152.134
+51.0,male,39.7,1.0,no,southwest ,9391.346
+42.0,male,26.315,1.0,no,northwest ,6940.90985
+23.0,male,35.2,1.0,no,southwest ,2416.955
+21.0,female,21.89,2.0,no,southeast ,3180.5101
+41.0,male,34.21,1.0,no,southeast ,6289.7549
+21.0,male,27.36,0.0,no,northeast,2104.1134
+41.0,female,28.05,1.0,no,southeast ,6770.1925
+56.0,male,39.6,0.0,no,southwest ,10601.412
+53.0,male,31.16,1.0,no,northwest ,10461.9794
+56.0,female,41.91,0.0,no,southeast ,11093.6229
+18.0,male,23.75,0.0,no,northeast,1705.6245
+18.0,female,30.305,0.0,no,northeast,2203.73595
+18.0,male,23.32,1.0,no,southeast ,1711.0268
+39.0,male,34.1,2.0,no,southeast ,23563.01618
+33.0,male,27.1,1.0,yes,southwest ,19040.876
+20.0,male,27.93,0.0,no,northeast,1967.0227
+44.0,male,25.365,1.0,no,northwest ,7518.02535
+30.0,female,28.38,1.0,yes,southeast ,19521.9682
+57.0,male,40.28,0.0,no,northeast,20709.02034
+59.0,female,23.655,0.0,yes,northwest ,25678.77845
+47.0,male,36.19,0.0,yes,southeast ,41676.0811
+32.0,female,29.735,0.0,no,northwest ,4357.04365
+50.0,male,26.6,0.0,no,southwest ,8444.474
+47.0,female,27.83,0.0,yes,southeast ,23065.4207
+38.0,female,30.69,1.0,no,southeast ,5976.8311
+31.0,female,25.74,0.0,no,southeast ,3756.6216
+41.0,female,21.755,1.0,no,northeast,13725.47184
+20.0,male,27.93,0.0,no,northeast,1967.0227
+61.0,male,38.38,0.0,no,northwest ,12950.0712
+40.0,male,29.9,2.0,no,southwest ,6600.361
+30.0,female,33.33,1.0,no,southeast ,4151.0287
+22.0,female,20.235,0.0,no,northwest ,2527.81865
+54.0,male,30.02,0.0,no,northwest ,24476.47851
+21.0,female,35.72,0.0,no,northwest ,2404.7338
+30.0,male,25.46,0.0,no,northeast,3645.0894
+41.0,female,32.965,0.0,no,northwest ,6571.02435
+18.0,male,27.36,1.0,yes,northeast,17178.6824
+25.0,female,28.595,0.0,no,northeast,3213.62205
+40.0,male,24.97,2.0,no,southeast ,6593.5083
+18.0,female,20.79,0.0,no,southeast ,1607.5101
+61.0,female,44.0,0.0,no,southwest ,13063.883
+57.0,male,23.7,0.0,no,southwest ,10959.33
+24.0,female,29.925,0.0,no,northwest ,2850.68375
+30.0,female,28.38,1.0,yes,southeast ,19521.9682
+58.0,male,36.08,0.0,no,southeast ,11363.2832
+37.0,female,17.29,2.0,no,northeast,6877.9801
+39.0,female,24.89,3.0,yes,northeast,21659.9301
+54.0,female,24.605,3.0,no,northwest ,12479.70895
+58.0,male,34.865,0.0,no,northeast,11944.59435
+56.0,male,33.725,0.0,no,northwest ,10976.24575
+44.0,male,29.735,2.0,no,northeast,32108.66282
+33.0,female,24.31,0.0,no,southeast ,4185.0979
+37.0,female,25.555,1.0,yes,northeast,20296.86345
+19.0,female,36.575,0.0,no,northwest ,2136.88225
+61.0,female,21.09,0.0,no,northwest ,13415.0381
+46.0,female,27.72,1.0,no,southeast ,8232.6388
+44.0,male,21.85,3.0,no,northeast,8891.1395
+35.0,male,27.74,2.0,yes,northeast,20984.0936
+47.0,male,32.3,1.0,no,southwest ,8062.764
+27.0,male,42.13,0.0,yes,southeast ,39611.7577
+55.0,male,21.5,1.0,no,southwest ,10791.96
+61.0,female,28.2,0.0,no,southwest ,13041.921
+43.0,female,25.08,0.0,no,northeast,7325.0482
+38.0,male,19.3,0.0,yes,southwest ,15820.699
+21.0,male,36.85,0.0,no,southeast ,1534.3045
+46.0,male,19.855,0.0,no,northwest ,7526.70645
+41.0,male,21.78,1.0,no,southeast ,6272.4772
+44.0,male,38.06,1.0,no,southeast ,7152.6714
+36.0,female,27.74,0.0,no,northeast,5469.0066
+50.0,male,26.41,0.0,no,northwest ,8827.2099
+18.0,female,30.305,0.0,no,northeast,2203.73595
+37.0,female,34.105,1.0,no,northwest ,6112.35295
+45.0,female,30.495,1.0,yes,northwest ,39725.51805
+61.0,female,25.08,0.0,no,southeast ,24513.09126
+56.0,male,33.66,4.0,no,southeast ,12949.1554
+62.0,female,36.86,1.0,no,northeast,31620.00106
+64.0,female,26.885,0.0,yes,northwest ,29330.98315
+18.0,female,21.66,0.0,yes,northeast,14283.4594
+64.0,female,31.3,2.0,yes,southwest ,47291.055
+42.0,male,31.255,0.0,no,northwest ,6358.77645
+43.0,female,46.2,0.0,yes,southeast ,45863.205
+60.0,female,18.335,0.0,no,northeast,13204.28565
+28.0,male,31.68,0.0,yes,southeast ,34672.1472
+19.0,male,27.835,0.0,no,northwest ,1635.73365
+20.0,male,40.47,0.0,no,northeast,1984.4533
+61.0,male,36.1,3.0,no,southwest ,27941.28758
+38.0,male,19.95,1.0,no,northwest ,5855.9025
+21.0,female,16.815,1.0,no,northeast,3167.45585
+18.0,male,23.32,1.0,no,southeast ,1711.0268
+21.0,female,32.68,2.0,no,northwest ,26018.95052
+51.0,female,36.385,3.0,no,northwest ,11436.73815
+48.0,female,22.8,0.0,no,southwest ,8269.044
+62.0,female,32.68,0.0,no,northwest ,13844.7972
+57.0,female,23.18,0.0,no,northwest ,11830.6072
+38.0,male,19.3,0.0,yes,southwest ,15820.699
+25.0,female,22.515,1.0,no,northwest ,3594.17085
+38.0,female,34.8,2.0,no,southwest ,6571.544
+46.0,female,19.95,2.0,no,northwest ,9193.8385
+20.0,female,33.0,0.0,no,southeast ,1880.07
+53.0,female,22.88,1.0,yes,southeast ,23244.7902
+29.0,female,29.59,1.0,no,southeast ,3947.4131
+62.0,female,33.2,0.0,no,southwest ,13462.52
+39.0,male,24.51,2.0,no,northwest ,6710.1919
+64.0,male,38.19,0.0,no,northeast,14410.9321
+50.0,male,32.205,0.0,no,northwest ,8835.26495
+57.0,male,27.94,1.0,no,southeast ,11554.2236
+43.0,female,34.4,3.0,no,southwest ,8522.003
+19.0,male,44.88,0.0,yes,southeast ,39722.7462
+46.0,female,27.74,0.0,no,northwest ,8026.6666
+19.0,female,32.49,0.0,yes,northwest ,36898.73308
+57.0,male,28.1,0.0,no,southwest ,10965.446
+34.0,male,25.27,1.0,no,northwest ,4894.7533
+40.0,male,19.8,1.0,yes,southeast ,17179.522
+37.0,female,38.39,0.0,yes,southeast ,40419.0191
+55.0,female,32.395,1.0,no,northeast,11879.10405
+44.0,male,27.4,2.0,no,southwest ,7726.854
+45.0,female,27.645,1.0,no,northwest ,28340.18885
+19.0,female,21.7,0.0,yes,southwest ,13844.506
+29.0,male,29.735,2.0,no,northwest ,18157.876
+19.0,female,28.4,1.0,no,southwest ,2331.519
+52.0,female,30.875,0.0,no,northeast,23045.56616
+43.0,male,35.31,2.0,no,southeast ,18806.14547
+22.0,male,25.175,0.0,no,northwest ,2045.68525
+38.0,female,40.565,1.0,no,northwest ,6373.55735
+54.0,male,32.775,0.0,no,northeast,10435.06525
+63.0,male,31.445,0.0,no,northeast,13974.45555
+36.0,male,28.025,1.0,yes,northeast,20773.62775
+18.0,male,28.5,0.0,no,northeast,1712.227
+25.0,male,33.33,2.0,yes,southeast ,36124.5737
+42.0,female,23.37,0.0,yes,northeast,19964.7463
+50.0,male,37.07,1.0,no,southeast ,9048.0273
+34.0,female,26.73,1.0,no,southeast ,5002.7827
+58.0,male,32.01,1.0,no,southeast ,11946.6259
+55.0,female,33.535,2.0,no,northwest ,12269.68865
+21.0,female,34.87,0.0,no,southeast ,2020.5523
+47.0,male,19.19,1.0,no,northeast,8627.5411
+53.0,male,31.16,1.0,no,northwest ,10461.9794
+22.0,female,20.235,0.0,no,northwest ,2527.81865
+59.0,male,26.4,0.0,no,southeast ,11743.299
+35.0,female,38.095,2.0,no,northeast,24915.04626
+26.0,male,30.0,1.0,no,southwest ,2904.088
+19.0,female,24.605,1.0,no,northwest ,2709.24395
+18.0,male,33.535,0.0,yes,northeast,34617.84065
+54.0,female,32.68,0.0,no,northeast,10923.9332
+55.0,male,37.715,3.0,no,northwest ,30063.58055
+19.0,female,25.745,1.0,no,northwest ,2710.82855
+43.0,female,26.7,2.0,yes,southwest ,22478.6
+62.0,female,32.68,0.0,no,northwest ,13844.7972
+49.0,female,30.78,1.0,no,northeast,9778.3472
+31.0,female,25.8,2.0,no,southwest ,4934.705
+49.0,male,30.9,0.0,yes,southwest ,39727.614
+21.0,male,22.3,1.0,no,southwest ,2103.08
+56.0,female,35.8,1.0,no,southwest ,11674.13
+19.0,female,28.3,0.0,yes,southwest ,17081.08
+28.0,male,23.98,3.0,yes,southeast ,17663.1442
+52.0,male,34.485,3.0,yes,northwest ,60021.39897
+47.0,male,36.08,1.0,yes,southeast ,42211.1382
+55.0,male,30.685,0.0,yes,northeast,42303.69215
+46.0,male,30.495,3.0,yes,northwest ,40720.55105
+44.0,female,27.645,0.0,no,northwest ,7421.19455
+23.0,female,42.75,1.0,yes,northeast,40904.1995
+23.0,female,28.12,0.0,no,northwest ,2690.1138
+24.0,female,30.1,3.0,no,southwest ,4234.927
+53.0,female,23.75,2.0,no,northeast,11729.6795
+56.0,male,36.1,3.0,no,southwest ,12363.547
+37.0,male,34.2,1.0,yes,northeast,39047.285
+49.0,female,42.68,2.0,no,southeast ,9800.8882
+27.0,male,33.155,2.0,no,northwest ,4058.71245
+36.0,male,34.43,2.0,no,southeast ,5584.3057
+47.0,female,27.645,2.0,yes,northwest ,24535.69855
+60.0,female,18.335,0.0,no,northeast,13204.28565
+48.0,female,28.9,0.0,no,southwest ,8277.523
+54.0,female,46.7,2.0,no,southwest ,11538.421
+28.0,male,33.82,0.0,no,northwest ,19673.33573
+32.0,female,33.155,3.0,no,northwest ,6128.79745
+19.0,male,20.425,0.0,no,northwest ,1625.43375
+37.0,male,29.83,2.0,no,northeast,6406.4107
+59.0,male,37.4,0.0,no,southwest ,21797.0004
+44.0,male,31.35,1.0,yes,northeast,39556.4945
+40.0,male,32.3,2.0,no,northwest ,6986.697
+52.0,female,23.18,0.0,no,northeast,10197.7722
+20.0,male,27.3,0.0,yes,southwest ,16232.847
+18.0,male,33.66,0.0,no,southeast ,1136.3994
+53.0,male,29.48,0.0,no,southeast ,9487.6442
+51.0,male,42.9,2.0,yes,southeast ,47462.894
+60.0,female,36.005,0.0,no,northeast,13228.84695
+19.0,male,25.555,1.0,no,northwest ,2221.56445
+53.0,female,39.6,1.0,no,southeast ,10579.711
+36.0,male,27.55,3.0,no,northeast,6746.7425
+18.0,male,21.78,2.0,no,southeast ,11884.04858
+49.0,female,23.18,2.0,no,northwest ,10156.7832
+50.0,male,32.3,1.0,yes,northeast,41919.097
+49.0,male,36.85,0.0,no,southeast ,8125.7845
+23.0,male,26.51,0.0,no,southeast ,1815.8759
+26.0,male,29.15,1.0,no,southeast ,2902.9065
+56.0,male,31.79,2.0,yes,southeast ,43813.8661
+19.0,male,35.4,0.0,no,southwest ,1263.249
+64.0,male,39.16,1.0,no,southeast ,14418.2804
+45.0,male,20.35,3.0,no,southeast ,8605.3615
+47.0,female,23.6,1.0,no,southwest ,8539.671
+49.0,female,41.47,4.0,no,southeast ,10977.2063
+30.0,male,28.69,3.0,yes,northwest ,20745.9891
+61.0,female,44.0,0.0,no,southwest ,13063.883
+25.0,male,26.8,3.0,no,southwest ,3906.127
+50.0,female,27.075,1.0,no,northeast,10106.13425
+30.0,female,31.4,1.0,no,southwest ,3659.346
+59.0,male,41.14,1.0,yes,southeast ,48970.2476
+46.0,male,19.855,0.0,no,northwest ,7526.70645
+53.0,female,22.61,3.0,yes,northeast,24873.3849
+63.0,female,37.7,0.0,yes,southwest ,48824.45
+45.0,female,27.645,1.0,no,northwest ,28340.18885
+18.0,male,29.37,1.0,no,southeast ,1719.4363
+44.0,male,30.2,2.0,yes,southwest ,38998.546
+38.0,male,29.26,2.0,no,northwest ,6457.8434
+21.0,female,21.89,2.0,no,southeast ,3180.5101
+61.0,male,36.1,3.0,no,southwest ,27941.28758
+63.0,male,30.8,0.0,no,southwest ,13390.559
+20.0,male,35.31,1.0,no,southeast ,27724.28875
+64.0,female,26.885,0.0,yes,northwest ,29330.98315
+53.0,male,41.47,0.0,no,southeast ,9504.3103
+49.0,female,41.47,4.0,no,southeast ,10977.2063
+29.0,male,29.64,1.0,no,northeast,20277.80751
+40.0,female,29.81,1.0,no,southeast ,6500.2359
+28.0,female,37.62,1.0,no,southeast ,3766.8838
+32.0,female,44.22,0.0,no,southeast ,3994.1778
+35.0,male,17.86,1.0,no,northwest ,5116.5004
+21.0,female,21.89,2.0,no,southeast ,3180.5101
+19.0,male,25.555,0.0,no,northwest ,1632.56445
+26.0,female,22.61,0.0,no,northwest ,3176.8159
+18.0,male,39.14,0.0,no,northeast,12890.05765
+60.0,female,30.5,0.0,no,southwest ,12638.195
+37.0,female,34.8,2.0,yes,southwest ,39836.519
+18.0,male,33.66,0.0,no,southeast ,1136.3994
+30.0,male,30.9,3.0,no,southwest ,5325.651
+42.0,female,29.48,2.0,no,southeast ,7640.3092
+56.0,female,25.3,0.0,no,southwest ,11070.535
+23.0,male,32.56,0.0,no,southeast ,1824.2854
+62.0,male,30.875,3.0,yes,northwest ,46718.16325
+37.0,female,38.39,0.0,yes,southeast ,40419.0191
+40.0,female,41.42,1.0,no,northwest ,28476.73499
+21.0,female,33.63,2.0,no,northwest ,3579.8287
+23.0,female,23.18,2.0,no,northwest ,14426.07385
+53.0,female,35.9,2.0,no,southwest ,11163.568
+37.0,male,24.32,2.0,no,northwest ,6198.7518
+29.0,female,38.83,3.0,no,southeast ,5138.2567
+41.0,male,30.59,2.0,no,northwest ,7256.7231
+33.0,female,36.29,3.0,no,northeast,6551.7501
+51.0,female,34.2,1.0,no,southwest ,9872.701
+54.0,male,40.565,3.0,yes,northeast,48549.17835
+49.0,female,36.63,3.0,no,southeast ,10381.4787
+53.0,female,35.9,2.0,no,southwest ,11163.568
+27.0,male,18.905,3.0,no,northeast,4827.90495
+23.0,female,28.49,1.0,yes,southeast ,18328.2381
+23.0,male,50.38,1.0,no,southeast ,2438.0552
+25.0,female,28.595,0.0,no,northeast,3213.62205
+32.0,male,30.03,1.0,no,southeast ,4074.4537
+23.0,female,28.12,0.0,no,northwest ,2690.1138
+18.0,male,29.37,1.0,no,southeast ,1719.4363
+39.0,female,24.89,3.0,yes,northeast,21659.9301
+52.0,female,18.335,0.0,no,northwest ,9991.03765
+28.0,female,25.935,1.0,no,northwest ,4133.64165
+18.0,female,31.13,0.0,no,southeast ,1621.8827
+40.0,female,25.46,1.0,no,northeast,7077.1894
+34.0,female,33.7,1.0,no,southwest ,5012.471
+57.0,male,43.7,1.0,no,southwest ,11576.13
+42.0,male,24.64,0.0,yes,southeast ,19515.5416
+53.0,female,22.88,1.0,yes,southeast ,23244.7902
+43.0,female,46.2,0.0,yes,southeast ,45863.205
+39.0,female,31.92,2.0,no,northwest ,7209.4918
+44.0,male,37.1,2.0,no,southwest ,7740.337
+51.0,male,31.635,0.0,no,northwest ,9174.13565
+27.0,female,36.08,0.0,yes,southeast ,37133.8982
+21.0,female,21.89,2.0,no,southeast ,3180.5101
+34.0,female,33.25,1.0,no,northeast,5594.8455
+62.0,female,39.2,0.0,no,southwest ,13470.86
+63.0,female,26.98,0.0,yes,northwest ,28950.4692
+29.0,male,37.29,2.0,no,southeast ,4058.1161
+22.0,male,35.6,0.0,yes,southwest ,35585.576
+62.0,female,32.965,3.0,no,northwest ,15612.19335
+44.0,female,38.95,0.0,yes,northwest ,42983.4585
+55.0,male,33.88,3.0,no,southeast ,11987.1682
+63.0,female,37.7,0.0,yes,southwest ,48824.45
+20.0,male,27.93,0.0,no,northeast,1967.0227
+40.0,female,32.775,2.0,yes,northwest ,40003.33225
+27.0,female,23.21,1.0,no,southeast ,3561.8889
+36.0,male,41.895,3.0,yes,northeast,43753.33705
+19.0,female,28.88,0.0,yes,northwest ,17748.5062
+55.0,female,26.98,0.0,no,northwest ,11082.5772
+38.0,female,28.0,3.0,no,southwest ,7151.092
+20.0,male,29.735,0.0,no,northwest ,1769.53165
+31.0,male,34.39,3.0,yes,northwest ,38746.3551
+52.0,male,47.74,1.0,no,southeast ,9748.9106
+19.0,female,32.11,0.0,no,northwest ,2130.6759
+42.0,male,26.9,0.0,no,southwest ,5969.723
+57.0,female,31.16,0.0,yes,northwest ,43578.9394
+18.0,female,31.35,0.0,no,southeast ,1622.1885
+25.0,male,26.695,4.0,no,northwest ,4877.98105
+39.0,male,21.85,1.0,no,northwest ,6117.4945
+44.0,male,31.35,1.0,yes,northeast,39556.4945
+20.0,male,29.735,0.0,no,northwest ,1769.53165
+58.0,male,34.865,0.0,no,northeast,11944.59435
+30.0,male,24.13,1.0,no,northwest ,4032.2407
+18.0,female,38.28,0.0,no,southeast ,1631.8212
+34.0,female,19.0,3.0,no,northeast,6753.038
+51.0,male,23.21,1.0,yes,southeast ,22218.1149
+61.0,female,44.0,0.0,no,southwest ,13063.883
+45.0,male,21.375,0.0,no,northwest ,7222.78625
+18.0,female,31.35,0.0,no,southeast ,1622.1885
+19.0,female,21.7,0.0,yes,southwest ,13844.506
+19.0,female,35.15,0.0,no,northwest ,2134.9015
+18.0,female,40.185,0.0,no,northeast,2217.46915
+64.0,male,36.96,2.0,yes,southeast ,49577.6624
+18.0,male,33.33,0.0,no,southeast ,1135.9407
+39.0,female,24.89,3.0,yes,northeast,21659.9301
+27.0,female,31.4,0.0,yes,southwest ,34838.873
+46.0,male,38.17,2.0,no,southeast ,8347.1643
+19.0,female,24.7,0.0,no,southwest ,1737.376
+53.0,male,34.105,0.0,yes,northeast,43254.41795
+57.0,male,33.63,1.0,no,northwest ,11945.1327
+54.0,male,30.8,1.0,yes,southeast ,41999.52
+57.0,male,40.945,0.0,no,northeast,11566.30055
+48.0,female,27.265,1.0,no,northeast,9447.25035
+43.0,male,34.96,1.0,yes,northeast,41034.2214
+30.0,male,24.13,1.0,no,northwest ,4032.2407
+21.0,male,36.85,0.0,no,southeast ,1534.3045
+58.0,male,35.7,0.0,no,southwest ,11362.755
+19.0,female,37.43,0.0,no,northwest ,2138.0707
+56.0,male,33.725,0.0,no,northwest ,10976.24575
+38.0,female,28.0,3.0,no,southwest ,7151.092
+62.0,male,27.55,1.0,no,northwest ,13937.6665
+56.0,male,34.43,0.0,no,southeast ,10594.2257
+31.0,male,28.595,1.0,no,northwest ,4243.59005
+31.0,male,38.39,2.0,no,southeast ,4463.2051
+52.0,female,33.3,2.0,no,southwest ,10806.839
+42.0,male,26.07,1.0,yes,southeast ,38245.59327
+56.0,female,25.65,0.0,no,northwest ,11454.0215
+27.0,female,30.4,3.0,no,northwest ,18804.7524
+24.0,female,30.1,3.0,no,southwest ,4234.927
+23.0,female,28.49,1.0,yes,southeast ,18328.2381
+25.0,male,35.625,0.0,no,northwest ,2534.39375
+59.0,male,37.1,1.0,no,southwest ,12347.172
+42.0,male,26.125,2.0,no,northeast,7729.64575
+44.0,male,21.85,3.0,no,northeast,8891.1395
+52.0,male,34.485,3.0,yes,northwest ,60021.39897
+19.0,male,21.755,0.0,no,northwest ,1627.28245
+46.0,male,19.855,0.0,no,northwest ,7526.70645
+62.0,male,31.46,1.0,no,southeast ,27000.98473
+22.0,male,31.73,0.0,no,northeast,2254.7967
+22.0,male,33.77,0.0,no,southeast ,1674.6323
+59.0,male,41.14,1.0,yes,southeast ,48970.2476
+52.0,female,24.13,1.0,yes,northwest ,23887.6627
+33.0,female,24.31,0.0,no,southeast ,4185.0979
+50.0,female,23.54,2.0,no,southeast ,10107.2206
+23.0,male,41.91,0.0,no,southeast ,1837.2819
+57.0,male,28.1,0.0,no,southwest ,10965.446
+19.0,male,20.425,0.0,no,northwest ,1625.43375
+22.0,male,35.6,0.0,yes,southwest ,35585.576
+56.0,female,28.785,0.0,no,northeast,11658.37915
+58.0,male,36.08,0.0,no,southeast ,11363.2832
+18.0,male,21.565,0.0,yes,northeast,13747.87235
+53.0,female,26.7,2.0,no,southwest ,11150.78
+44.0,female,25.0,1.0,no,southwest ,7623.518
+38.0,male,19.95,1.0,no,northwest ,5855.9025
+45.0,female,35.3,0.0,no,southwest ,7348.142
+23.0,female,31.4,0.0,yes,southwest ,34166.273
+18.0,male,34.1,0.0,no,southeast ,1137.011
+36.0,male,30.875,1.0,no,northwest ,5373.36425
+37.0,male,34.2,1.0,yes,northeast,39047.285
+25.0,male,30.59,0.0,no,northeast,2727.3951
+43.0,male,23.2,0.0,no,southwest ,6250.435
+30.0,female,27.7,0.0,no,southwest ,3554.203
+42.0,male,35.8,2.0,no,southwest ,7160.094
+30.0,male,24.4,3.0,yes,southwest ,18259.216
+34.0,female,33.25,1.0,no,northeast,5594.8455
+18.0,male,33.77,1.0,no,southeast ,1725.5523
+57.0,female,23.98,1.0,no,southeast ,22192.43711
+46.0,male,19.855,0.0,no,northwest ,7526.70645
+27.0,male,33.155,2.0,no,northwest ,4058.71245
+31.0,female,29.1,0.0,no,southwest ,3761.292
+48.0,female,41.23,4.0,no,northwest ,11033.6617
+34.0,female,31.92,1.0,yes,northeast,37701.8768
+52.0,male,41.8,2.0,yes,southeast ,47269.854
+25.0,male,33.66,4.0,no,southeast ,4504.6624
+60.0,male,31.35,3.0,yes,northwest ,46130.5265
+25.0,male,45.54,2.0,yes,southeast ,42112.2356
+25.0,male,26.8,3.0,no,southwest ,3906.127
+32.0,male,30.8,3.0,no,southwest ,5253.524
+52.0,male,47.74,1.0,no,southeast ,9748.9106
+24.0,male,29.83,0.0,yes,northeast,18648.4217
+26.0,female,29.355,2.0,no,northeast,4564.19145
+32.0,female,37.145,3.0,no,northeast,6334.34355
+32.0,female,23.65,1.0,no,southeast ,17626.23951
+24.0,female,25.27,0.0,no,northeast,3044.2133
+36.0,male,28.595,3.0,no,northwest ,6548.19505
+19.0,female,24.7,0.0,no,southwest ,1737.376
+25.0,male,45.54,2.0,yes,southeast ,42112.2356
+46.0,female,30.2,2.0,no,southwest ,8825.086
+41.0,male,33.55,0.0,no,southeast ,5699.8375
+18.0,male,33.535,0.0,yes,northeast,34617.84065
+27.0,female,20.045,3.0,yes,northwest ,16420.49455
+27.0,male,30.3,3.0,no,southwest ,4260.744
+51.0,male,23.21,1.0,yes,southeast ,22218.1149
+33.0,male,27.1,1.0,yes,southwest ,19040.876
+29.0,female,25.6,4.0,no,southwest ,5708.867
+54.0,female,28.88,2.0,no,northeast,12096.6512
+40.0,male,29.355,1.0,no,northwest ,6393.60345
+18.0,male,25.46,0.0,no,northeast,1708.0014
+51.0,female,40.66,0.0,no,northeast,9875.6804
+56.0,female,28.785,0.0,no,northeast,11658.37915
+19.0,female,28.88,0.0,yes,northwest ,17748.5062
+45.0,female,36.3,2.0,no,southeast ,8527.532
+43.0,male,35.97,3.0,yes,southeast ,42124.5153
+52.0,female,30.78,1.0,no,northeast,10797.3362
+38.0,male,16.815,2.0,no,northeast,6640.54485
+44.0,male,30.69,2.0,no,southeast ,7731.4271
+60.0,female,30.5,0.0,no,southwest ,12638.195
+55.0,female,26.8,1.0,no,southwest ,35160.13457
+45.0,female,36.3,2.0,no,southeast ,8527.532
+37.0,male,29.83,2.0,no,northeast,6406.4107
+55.0,male,33.88,3.0,no,southeast ,11987.1682
+64.0,male,38.19,0.0,no,northeast,14410.9321
+63.0,male,41.47,0.0,no,southeast ,13405.3903
+33.0,female,36.29,3.0,no,northeast,6551.7501
+63.0,female,26.22,0.0,no,northwest ,14256.1928
+38.0,male,37.05,1.0,no,northeast,6079.6715
+27.0,male,32.585,3.0,no,northeast,4846.92015
+39.0,male,45.43,2.0,no,southeast ,6356.2707
+21.0,male,36.86,0.0,no,northwest ,1917.3184
+63.0,male,31.445,0.0,no,northeast,13974.45555
+51.0,female,40.66,0.0,no,northeast,9875.6804
+18.0,male,34.1,0.0,no,southeast ,1137.011
+54.0,female,32.68,0.0,no,northeast,10923.9332
+40.0,female,29.9,2.0,no,southwest ,6600.361
+21.0,female,22.135,0.0,no,northeast,2585.85065
+61.0,female,29.07,0.0,yes,northwest ,29141.3603
+18.0,female,38.17,0.0,no,southeast ,1631.6683
+29.0,male,29.64,1.0,no,northeast,20277.80751
+59.0,female,27.72,3.0,no,southeast ,14001.1338
+45.0,male,39.805,0.0,no,northeast,7448.40395
+27.0,female,34.8,1.0,no,southwest ,3577.999
+38.0,female,40.565,1.0,no,northwest ,6373.55735
+25.0,female,30.3,0.0,no,southwest ,2632.992
+57.0,female,50.16,0.0,yes,northwest ,43578.9394
+51.0,male,37.0,0.0,no,southwest ,8798.593
+52.0,female,24.86,0.0,no,southeast ,27117.99378
+48.0,female,36.575,0.0,no,northwest ,8671.19125
+19.0,male,30.25,0.0,yes,southeast ,32548.3405
+51.0,female,37.73,1.0,no,southeast ,9877.6077
+19.0,male,20.7,0.0,no,southwest ,1242.816
+19.0,female,24.51,1.0,no,northwest ,2709.1119
+30.0,female,28.38,1.0,yes,southeast ,19521.9682
+61.0,female,28.2,0.0,no,southwest ,13041.921
+46.0,female,35.53,0.0,yes,northeast,42111.6647
+60.0,male,24.32,1.0,no,northwest ,13112.6048
+18.0,female,36.85,0.0,yes,southeast ,36149.4835
+38.0,female,19.475,2.0,no,northwest ,6933.24225
+27.0,female,31.4,0.0,yes,southwest ,34838.873
+40.0,female,29.6,0.0,no,southwest ,5910.944
+52.0,female,38.38,2.0,no,northeast,11396.9002
+47.0,male,25.46,2.0,no,northeast,9225.2564
+53.0,male,36.6,3.0,no,southwest ,11264.541
+54.0,female,46.7,2.0,no,southwest ,11538.421
+60.0,female,24.53,0.0,no,southeast ,12629.8967
+43.0,female,34.58,1.0,no,northwest ,7727.2532
+41.0,male,30.78,3.0,yes,northeast,39597.4072
+24.0,female,27.6,0.0,no,southwest ,18955.22017
+35.0,male,24.42,3.0,yes,southeast ,19361.9988
+45.0,female,28.6,2.0,no,southeast ,8516.829
+18.0,male,26.125,0.0,no,northeast,1708.92575
+62.0,male,32.11,0.0,no,northeast,13555.0049
+58.0,female,22.77,0.0,no,southeast ,11833.7823
+59.0,male,29.83,3.0,yes,northeast,30184.9367
+63.0,female,36.85,0.0,no,southeast ,13887.9685
+19.0,female,32.11,0.0,no,northwest ,2130.6759
+44.0,female,38.95,0.0,yes,northwest ,42983.4585
+37.0,male,24.32,2.0,no,northwest ,6198.7518
+37.0,female,26.4,0.0,yes,southeast ,19539.243
+19.0,male,34.4,0.0,no,southwest ,1261.859
+26.0,female,17.195,2.0,yes,northeast,14455.64405
+49.0,male,32.3,3.0,no,northwest ,10269.46
+20.0,male,29.735,0.0,no,northwest ,1769.53165
+33.0,female,39.82,1.0,no,southeast ,4795.6568
+48.0,female,41.23,4.0,no,northwest ,11033.6617
+20.0,male,22.0,1.0,no,southwest ,1964.78
+48.0,male,37.29,2.0,no,southeast ,8978.1851
+18.0,male,30.14,0.0,no,southeast ,1131.5066
+28.0,male,24.3,5.0,no,southwest ,5615.369
+58.0,female,32.395,1.0,no,northeast,13019.16105
+29.0,female,31.16,0.0,no,northeast,3943.5954
+51.0,male,39.7,1.0,no,southwest ,9391.346
+51.0,male,30.03,1.0,no,southeast ,9377.9047
+48.0,female,32.3,2.0,no,northeast,10043.249
+18.0,male,28.31,1.0,no,northeast,11272.33139
+29.0,female,27.94,1.0,yes,southeast ,19107.7796
+43.0,female,35.64,1.0,no,southeast ,7345.7266
+27.0,male,45.9,2.0,no,southwest ,3693.428
+57.0,female,25.74,2.0,no,southeast ,12629.1656
+29.0,female,32.11,2.0,no,northwest ,4922.9159
+59.0,male,26.4,0.0,no,southeast ,11743.299
+32.0,female,24.6,0.0,yes,southwest ,17496.306
+57.0,male,40.945,0.0,no,northeast,11566.30055
+25.0,male,45.54,2.0,yes,southeast ,42112.2356
+43.0,female,25.08,0.0,no,northeast,7325.0482
+38.0,female,27.6,0.0,no,southwest ,5383.536
+32.0,male,33.82,1.0,no,northwest ,4462.7218
+18.0,male,17.29,2.0,yes,northeast,12829.4551
+55.0,male,32.67,1.0,no,southeast ,10807.4863
+47.0,female,33.345,0.0,no,northeast,20878.78443
+46.0,male,33.345,1.0,no,northeast,8334.45755
+18.0,female,38.28,0.0,no,southeast ,14133.03775
+26.0,male,17.67,0.0,no,northwest ,2680.9493
+42.0,male,24.86,0.0,no,southeast ,5966.8874
+35.0,male,27.61,1.0,no,southeast ,4747.0529
+30.0,female,33.33,1.0,no,southeast ,4151.0287
+29.0,male,37.29,2.0,no,southeast ,4058.1161
+43.0,male,27.8,0.0,yes,southwest ,37829.7242
+19.0,male,34.4,0.0,no,southwest ,1261.859
+49.0,male,22.515,0.0,no,northeast,8688.85885
+39.0,female,18.3,5.0,yes,southwest ,19023.26
+54.0,female,31.9,3.0,no,southeast ,27322.73386
+37.0,male,30.875,3.0,no,northwest ,6796.86325
+52.0,female,25.3,2.0,yes,southeast ,24667.419
+58.0,male,38.0,0.0,no,southwest ,11365.952
+25.0,female,42.13,1.0,no,southeast ,3238.4357
+64.0,female,39.7,0.0,no,southwest ,14319.031
+56.0,male,33.725,0.0,no,northwest ,10976.24575
+18.0,male,22.99,0.0,no,northeast,1704.5681
+22.0,male,39.5,0.0,no,southwest ,1682.597
+57.0,male,40.37,0.0,no,southeast ,10982.5013
+24.0,female,29.925,0.0,no,northwest ,2850.68375
+48.0,female,32.3,2.0,no,northeast,10043.249
+59.0,male,37.4,0.0,no,southwest ,21797.0004
+18.0,male,21.47,0.0,no,northeast,1702.4553
+30.0,female,33.33,1.0,no,southeast ,4151.0287
+26.0,male,30.0,1.0,no,southwest ,2904.088
+32.0,female,41.1,0.0,no,southwest ,3989.841
+36.0,male,29.7,0.0,no,southeast ,4399.731
+30.0,female,28.405,1.0,no,northwest ,4527.18295
+33.0,male,27.455,2.0,no,northwest ,5261.46945
+59.0,female,32.1,3.0,no,southwest ,14007.222
+64.0,female,39.33,0.0,no,northeast,14901.5167
+54.0,male,32.775,0.0,no,northeast,10435.06525
+48.0,male,29.7,0.0,no,southeast ,7789.635
+55.0,male,35.245,1.0,no,northeast,11394.06555
+49.0,female,33.345,2.0,no,northeast,10370.91255
+26.0,female,40.185,0.0,no,northwest ,3201.24515
+52.0,female,31.2,0.0,no,southwest ,9625.92
+49.0,female,22.61,1.0,no,northwest ,9566.9909
+25.0,female,30.3,0.0,no,southwest ,2632.992
+35.0,female,43.34,2.0,no,southeast ,5846.9176
+49.0,male,30.9,0.0,yes,southwest ,39727.614
+21.0,female,32.68,2.0,no,northwest ,26018.95052
+55.0,female,30.5,0.0,no,southwest ,10704.47
+59.0,female,27.83,3.0,no,southeast ,14001.2867
+63.0,female,23.085,0.0,no,northeast,14451.83515
+18.0,male,17.29,2.0,yes,northeast,12829.4551
+18.0,female,38.28,0.0,no,southeast ,14133.03775
+33.0,male,24.795,0.0,yes,northeast,17904.52705
+37.0,male,24.32,2.0,no,northwest ,6198.7518
+18.0,male,33.535,0.0,yes,northeast,34617.84065
+42.0,male,26.125,2.0,no,northeast,7729.64575
+48.0,female,41.23,4.0,no,northwest ,11033.6617
+27.0,female,20.045,3.0,yes,northwest ,16420.49455
+49.0,female,29.925,0.0,no,northwest ,8988.15875
+44.0,male,32.015,2.0,no,northwest ,8116.26885
+51.0,female,38.06,0.0,yes,southeast ,44400.4064
+63.0,female,36.3,0.0,no,southeast ,13887.204
+55.0,male,35.245,1.0,no,northeast,11394.06555
+52.0,male,47.74,1.0,no,southeast ,9748.9106
+31.0,female,29.26,1.0,no,southeast ,4350.5144
+20.0,female,26.84,1.0,yes,southeast ,17085.2676
+43.0,female,34.58,1.0,no,northwest ,7727.2532
+61.0,male,33.915,0.0,no,northeast,13143.86485
+42.0,male,24.64,0.0,yes,southeast ,19515.5416
+32.0,female,29.8,2.0,no,southwest ,5152.134
+53.0,female,26.6,0.0,no,northwest ,10355.641
+21.0,male,36.86,0.0,no,northwest ,1917.3184
+20.0,male,22.0,1.0,no,southwest ,1964.78
+46.0,female,28.05,1.0,no,southeast ,8233.0975
+51.0,female,36.67,2.0,no,northwest ,10848.1343
+42.0,male,26.315,1.0,no,northwest ,6940.90985
+62.0,female,29.92,0.0,no,southeast ,13457.9608
+44.0,female,36.955,1.0,no,northwest ,8023.13545
+41.0,male,40.26,0.0,no,southeast ,5709.1644
+30.0,female,27.93,0.0,no,northeast,4137.5227
+61.0,male,33.915,0.0,no,northeast,13143.86485
+45.0,female,35.3,0.0,no,southwest ,7348.142
+36.0,male,33.82,1.0,no,northwest ,5377.4578
+46.0,female,27.74,0.0,no,northwest ,8026.6666
+24.0,female,30.1,3.0,no,southwest ,4234.927
+49.0,female,23.845,3.0,yes,northeast,24106.91255
+37.0,male,24.32,2.0,no,northwest ,6198.7518
+18.0,female,40.28,0.0,no,northeast,2217.6012
+31.0,male,25.9,3.0,yes,southwest ,19199.944
+28.0,male,24.3,5.0,no,southwest ,5615.369
+43.0,male,35.31,2.0,no,southeast ,18806.14547
+45.0,male,24.035,2.0,no,northeast,8604.48365
+43.0,male,26.03,0.0,no,northeast,6837.3687
+63.0,female,36.85,0.0,no,southeast ,13887.9685
+63.0,male,39.8,3.0,no,southwest ,15170.069
+27.0,male,18.905,3.0,no,northeast,4827.90495
+32.0,male,28.93,1.0,yes,southeast ,19719.6947
+18.0,female,40.28,0.0,no,northeast,2217.6012
+20.0,male,35.625,3.0,yes,northwest ,37465.34375
+31.0,female,29.26,1.0,no,southeast ,4350.5144
+59.0,female,34.8,2.0,no,southwest ,36910.60803
+29.0,male,29.64,1.0,no,northeast,20277.80751
+22.0,female,39.805,0.0,no,northeast,2755.02095
+27.0,female,31.4,0.0,yes,southwest ,34838.873
+32.0,male,37.335,1.0,no,northeast,4667.60765
+40.0,female,29.81,1.0,no,southeast ,6500.2359
+19.0,male,34.1,0.0,no,southwest ,1261.442
+54.0,male,32.775,0.0,no,northeast,10435.06525
+27.0,male,29.15,0.0,yes,southeast ,18246.4955
+49.0,male,28.7,1.0,no,southwest ,8703.456
+19.0,female,30.495,0.0,no,northwest ,2128.43105
+33.0,female,35.53,0.0,yes,northwest ,55135.40209
+19.0,male,35.53,0.0,no,northwest ,1646.4297
+40.0,female,41.42,1.0,no,northwest ,28476.73499
+45.0,male,24.31,5.0,no,southeast ,9788.8659
+31.0,male,28.595,1.0,no,northwest ,4243.59005
+23.0,male,50.38,1.0,no,southeast ,2438.0552
+30.0,female,27.7,0.0,no,southwest ,3554.203
+19.0,male,20.9,1.0,no,southwest ,1832.094
+37.0,female,30.8,2.0,no,southeast ,6313.759
+63.0,male,41.325,3.0,no,northwest ,15555.18875
+27.0,male,28.5,0.0,yes,northwest ,18310.742
+19.0,male,30.59,0.0,no,northwest ,1639.5631
+41.0,male,23.94,1.0,no,northeast,6858.4796
+26.0,male,23.7,2.0,no,southwest ,3484.331
+63.0,male,35.09,0.0,yes,southeast ,47055.5321
+39.0,male,26.41,0.0,yes,northeast,20149.3229
+22.0,male,34.8,3.0,no,southwest ,3443.064
+58.0,female,41.91,0.0,no,southeast ,24227.33724
+45.0,male,24.035,2.0,no,northeast,8604.48365
+47.0,male,25.41,1.0,yes,southeast ,21978.6769
+27.0,male,32.585,3.0,no,northeast,4846.92015
+43.0,female,35.64,1.0,no,southeast ,7345.7266
+48.0,female,28.88,1.0,no,northwest ,9249.4952
+35.0,male,27.61,1.0,no,southeast ,4747.0529
+29.0,female,38.83,3.0,no,southeast ,5138.2567
+21.0,male,28.975,0.0,no,northwest ,1906.35825
+40.0,female,41.42,1.0,no,northwest ,28476.73499
+47.0,female,24.1,1.0,no,southwest ,26236.57997
+38.0,male,16.815,2.0,no,northeast,6640.54485
+42.0,female,32.87,0.0,no,northeast,7050.0213
+52.0,female,30.875,0.0,no,northeast,23045.56616
+23.0,male,18.715,0.0,no,northwest ,21595.38229
+63.0,male,33.1,0.0,no,southwest ,13393.756
+18.0,male,33.66,0.0,no,southeast ,1136.3994
+19.0,male,27.7,0.0,yes,southwest ,16297.846
+41.0,female,28.05,1.0,no,southeast ,6770.1925
+43.0,female,30.685,2.0,no,northwest ,8310.83915
+44.0,female,36.955,1.0,no,northwest ,8023.13545
+21.0,male,31.1,0.0,no,southwest ,1526.312
+18.0,female,38.665,2.0,no,northeast,3393.35635
+63.0,male,33.1,0.0,no,southwest ,13393.756
+52.0,female,44.7,3.0,no,southwest ,11411.685
+19.0,male,27.7,0.0,yes,southwest ,16297.846
+60.0,female,24.035,0.0,no,northwest ,13012.20865
+24.0,female,27.72,0.0,no,southeast ,2464.6188
+30.0,female,43.12,2.0,no,southeast ,4753.6368
+25.0,male,26.695,4.0,no,northwest ,4877.98105
+50.0,male,26.6,0.0,no,southwest ,8444.474
+41.0,male,33.55,0.0,no,southeast ,5699.8375
+63.0,male,21.66,1.0,no,northwest ,14349.8544
+42.0,female,24.985,2.0,no,northwest ,8017.06115
+59.0,male,29.83,3.0,yes,northeast,30184.9367
+58.0,female,33.44,0.0,no,northwest ,12231.6136
+19.0,female,28.31,0.0,yes,northwest ,17468.9839
+43.0,female,34.58,1.0,no,northwest ,7727.2532
+62.0,female,30.495,2.0,no,northwest ,15019.76005
+58.0,male,38.0,0.0,no,southwest ,11365.952
+31.0,female,23.6,2.0,no,southwest ,4931.647
+34.0,female,23.56,0.0,no,northeast,4992.3764
+51.0,male,42.9,2.0,yes,southeast ,47462.894
+45.0,female,25.7,3.0,no,southwest ,9101.798
+37.0,female,30.78,0.0,yes,northeast,37270.1512
+20.0,male,29.735,0.0,no,northwest ,1769.53165
+29.0,female,21.85,0.0,yes,northeast,16115.3045
+56.0,male,22.1,0.0,no,southwest ,10577.087
+49.0,male,31.35,1.0,no,northeast,9290.1395
+33.0,female,42.94,3.0,no,northwest ,6360.9936
+57.0,female,31.825,0.0,no,northwest ,11842.62375
+54.0,female,31.9,1.0,no,southeast ,10928.849
+55.0,female,26.98,0.0,no,northwest ,11082.5772
+51.0,female,34.2,1.0,no,southwest ,9872.701
+48.0,female,25.85,3.0,yes,southeast ,24180.9335
+39.0,male,21.85,1.0,no,northwest ,6117.4945
+18.0,female,36.85,0.0,no,southeast ,1629.8335
+42.0,female,26.6,0.0,yes,northwest ,21348.706
+38.0,female,40.565,1.0,no,northwest ,6373.55735
+18.0,male,33.66,0.0,no,southeast ,1136.3994
+51.0,female,40.66,0.0,no,northeast,9875.6804
+54.0,male,31.6,0.0,no,southwest ,9850.432
+59.0,male,29.7,2.0,no,southeast ,12925.886
+19.0,female,28.4,1.0,no,southwest ,2331.519
+46.0,male,33.44,1.0,no,northeast,8334.5896
+31.0,female,26.62,0.0,no,southeast ,3757.8448
+59.0,male,37.1,1.0,no,southwest ,12347.172
+42.0,female,26.18,1.0,no,southeast ,7046.7222
+45.0,male,30.36,0.0,yes,southeast ,62592.87309
+25.0,female,41.325,0.0,no,northeast,17878.90068
+43.0,male,20.13,2.0,yes,southeast ,18767.7377
+53.0,female,36.86,3.0,yes,northwest ,46661.4424
+23.0,female,42.75,1.0,yes,northeast,40904.1995
+29.0,female,25.9,0.0,no,southwest ,3353.284
+33.0,male,42.4,5.0,no,southwest ,6666.243
+48.0,female,27.36,1.0,no,northeast,9447.3824
+61.0,female,31.16,0.0,no,northwest ,13429.0354
+21.0,male,20.235,3.0,no,northeast,3861.20965
+43.0,male,38.06,2.0,yes,southeast ,42560.4304
+49.0,female,27.1,1.0,no,southwest ,26140.3603
+51.0,male,30.03,1.0,no,southeast ,9377.9047
+34.0,male,42.13,2.0,no,southeast ,5124.1887
+53.0,female,39.6,1.0,no,southeast ,10579.711
+64.0,male,37.905,0.0,no,northwest ,14210.53595
+36.0,female,29.04,4.0,no,southeast ,7243.8136
+36.0,female,29.92,0.0,no,southeast ,4889.0368
+19.0,male,27.6,0.0,no,southwest ,1252.407
+20.0,female,28.785,0.0,no,northeast,2457.21115
+18.0,male,23.75,0.0,no,northeast,1705.6245
+53.0,female,33.25,0.0,no,northeast,10564.8845
+52.0,male,26.4,3.0,no,southeast ,25992.82104
+28.0,female,17.29,0.0,no,northeast,3732.6251
+29.0,male,27.94,0.0,no,southeast ,2867.1196
+57.0,female,34.295,2.0,no,northeast,13224.05705
+48.0,male,34.3,3.0,no,southwest ,9563.029
+20.0,female,31.46,0.0,no,southeast ,1877.9294
+35.0,female,26.125,0.0,no,northeast,5227.98875
+44.0,female,27.645,0.0,no,northwest ,7421.19455
+48.0,male,35.625,4.0,no,northeast,10736.87075
+26.0,male,27.06,0.0,yes,southeast ,17043.3414
+34.0,male,22.42,2.0,no,northeast,27375.90478
+51.0,male,39.7,1.0,no,southwest ,9391.346
+24.0,male,28.5,2.0,no,northwest ,3537.703
+51.0,female,37.05,3.0,yes,northeast,46255.1125
+45.0,male,30.36,0.0,yes,southeast ,62592.87309
+63.0,male,41.47,0.0,no,southeast ,13405.3903
+46.0,male,22.3,0.0,no,southwest ,7147.105
+58.0,male,49.06,0.0,no,southeast ,11381.3254
+19.0,female,28.88,0.0,yes,northwest ,17748.5062
+20.0,male,32.395,1.0,no,northwest ,2362.22905
+43.0,male,30.115,3.0,no,northwest ,8410.04685
+62.0,female,30.495,2.0,no,northwest ,15019.76005
+31.0,male,38.39,2.0,no,southeast ,4463.2051
+36.0,female,26.885,0.0,no,northwest ,5267.81815
+51.0,female,20.6,0.0,no,southwest ,9264.797
+62.0,male,21.4,0.0,no,southwest ,12957.118
+48.0,female,33.33,0.0,no,southeast ,8283.6807
+31.0,male,39.49,1.0,no,southeast ,3875.7341
+18.0,female,29.165,0.0,no,northeast,7323.734819
+19.0,female,28.31,0.0,yes,northwest ,17468.9839
+45.0,female,36.3,2.0,no,southeast ,8527.532
+18.0,male,28.5,0.0,no,northeast,1712.227
+54.0,female,32.68,0.0,no,northeast,10923.9332
+38.0,male,37.05,1.0,no,northeast,6079.6715
+25.0,male,30.59,0.0,no,northeast,2727.3951
+20.0,male,35.625,3.0,yes,northwest ,37465.34375
+21.0,male,25.745,2.0,no,northeast,3279.86855
+49.0,male,30.3,0.0,no,southwest ,8116.68
+36.0,male,28.595,3.0,no,northwest ,6548.19505
+19.0,male,30.4,0.0,no,southwest ,1256.299
+19.0,male,36.955,0.0,yes,northwest ,36219.40545
+59.0,female,26.695,3.0,no,northwest ,14382.70905
+39.0,female,32.5,1.0,no,southwest ,6238.298
+18.0,female,40.28,0.0,no,northeast,2217.6012
+22.0,female,28.05,0.0,no,southeast ,2155.6815
+45.0,male,23.56,2.0,no,northeast,8603.8234
+53.0,male,24.32,0.0,no,northwest ,9863.4718
+57.0,female,23.18,0.0,no,northwest ,11830.6072
+32.0,male,28.88,0.0,no,northwest ,3866.8552
+19.0,male,25.555,1.0,no,northwest ,2221.56445
+61.0,female,29.92,3.0,yes,southeast ,30942.1918
+62.0,male,30.875,3.0,yes,northwest ,46718.16325
+37.0,male,36.19,0.0,no,southeast ,19214.70553
+61.0,male,38.38,0.0,no,northwest ,12950.0712
+19.0,male,26.03,1.0,yes,northwest ,16450.8947
+38.0,female,19.95,2.0,no,northeast,7133.9025
+27.0,male,30.3,3.0,no,southwest ,4260.744
+43.0,female,25.27,1.0,yes,northeast,21771.3423
+30.0,female,30.9,3.0,no,southwest ,5325.651
+59.0,male,26.4,0.0,no,southeast ,11743.299
+20.0,male,35.31,1.0,no,southeast ,27724.28875
+55.0,female,29.83,0.0,no,northeast,11286.5387
+58.0,male,28.595,0.0,no,northwest ,11735.87905
+41.0,male,32.2,2.0,no,southwest ,6875.961
+34.0,female,33.25,1.0,no,northeast,5594.8455
+35.0,female,35.815,1.0,no,northwest ,5630.45785
+57.0,female,22.23,0.0,no,northeast,12029.2867
+32.0,male,28.88,0.0,no,northwest ,3866.8552
+23.0,male,35.2,1.0,no,southwest ,2416.955
+36.0,male,28.88,3.0,no,northeast,6748.5912
+39.0,male,45.43,2.0,no,southeast ,6356.2707
+18.0,male,53.13,0.0,no,southeast ,1163.4627
+48.0,male,32.3,1.0,no,northwest ,8765.249
+33.0,female,18.5,1.0,no,southwest ,4766.022
+31.0,male,30.875,0.0,no,northeast,3857.75925
+26.0,female,29.355,2.0,no,northeast,4564.19145
+34.0,female,37.335,2.0,no,northwest ,5989.52365
+19.0,male,35.53,0.0,no,northwest ,1646.4297
+23.0,male,41.91,0.0,no,southeast ,1837.2819
+18.0,male,23.32,1.0,no,southeast ,1711.0268
+48.0,male,34.3,3.0,no,southwest ,9563.029
+61.0,female,21.09,0.0,no,northwest ,13415.0381
+52.0,female,23.18,0.0,no,northeast,10197.7722
+44.0,female,27.645,0.0,no,northwest ,7421.19455
+28.0,male,23.98,3.0,yes,southeast ,17663.1442
+36.0,male,34.43,2.0,no,southeast ,5584.3057
+24.0,male,26.79,1.0,no,northwest ,12609.88702
+19.0,male,27.6,0.0,no,southwest ,1252.407
+56.0,female,25.3,0.0,no,southwest ,11070.535
+43.0,female,26.7,2.0,yes,southwest ,22478.6
+41.0,male,34.21,1.0,no,southeast ,6289.7549
+31.0,male,38.39,2.0,no,southeast ,4463.2051
+64.0,female,39.05,3.0,no,southeast ,16085.1275
+18.0,male,23.32,1.0,no,southeast ,1711.0268
+56.0,female,28.785,0.0,no,northeast,11658.37915
+39.0,male,21.85,1.0,no,northwest ,6117.4945
+31.0,male,38.39,2.0,no,southeast ,4463.2051
+23.0,male,37.1,3.0,no,southwest ,3597.596
+46.0,female,30.8,3.0,no,southwest ,9414.92
+22.0,male,31.73,0.0,no,northeast,2254.7967
+57.0,male,43.7,1.0,no,southwest ,11576.13
+29.0,female,25.9,0.0,no,southwest ,3353.284
+27.0,female,24.1,0.0,no,southwest ,2974.126
+61.0,male,36.1,3.0,no,southwest ,27941.28758
+31.0,female,29.1,0.0,no,southwest ,3761.292
+28.0,male,38.06,0.0,no,southeast ,2689.4954
+46.0,male,39.425,1.0,no,northeast,8342.90875
+30.0,female,21.945,1.0,no,northeast,4718.20355
+53.0,male,28.6,3.0,no,southwest ,11253.421
+52.0,male,34.1,0.0,no,southeast ,9140.951
+33.0,female,24.31,0.0,no,southeast ,4185.0979
+18.0,female,40.28,0.0,no,northeast,2217.6012
+24.0,female,27.6,0.0,no,southwest ,18955.22017
+61.0,female,35.91,0.0,no,northeast,13635.6379
+18.0,male,21.78,2.0,no,southeast ,11884.04858
+37.0,female,34.105,1.0,no,northwest ,6112.35295
+48.0,male,30.2,2.0,no,southwest ,8968.33
+39.0,female,32.8,0.0,no,southwest ,5649.715
+64.0,female,33.8,1.0,yes,southwest ,47928.03
+34.0,male,42.9,1.0,no,southwest ,4536.259
+37.0,male,34.2,1.0,yes,northeast,39047.285
+60.0,male,28.9,0.0,no,southwest ,12146.971
+48.0,male,30.2,2.0,no,southwest ,8968.33
+34.0,female,26.73,1.0,no,southeast ,5002.7827
+58.0,female,29.0,0.0,no,southwest ,11842.442
+25.0,male,25.84,1.0,no,northeast,3309.7926
+38.0,male,29.26,2.0,no,northwest ,6457.8434
+26.0,male,35.42,0.0,no,southeast ,2322.6218
+18.0,female,26.315,0.0,no,northeast,2198.18985
+19.0,female,32.11,0.0,no,northwest ,2130.6759
+44.0,female,25.8,1.0,no,southwest ,7624.63
+33.0,female,32.9,2.0,no,southwest ,5375.038
+27.0,female,21.47,0.0,no,northwest ,3353.4703
+44.0,female,36.955,1.0,no,northwest ,8023.13545
+27.0,female,24.75,0.0,yes,southeast ,16577.7795
+38.0,male,19.3,0.0,yes,southwest ,15820.699
+18.0,female,31.35,4.0,no,northeast,4561.1885
+53.0,male,34.105,0.0,yes,northeast,43254.41795
+59.0,male,28.785,0.0,no,northwest ,12129.61415
+21.0,male,23.75,2.0,no,northwest ,3077.0955
+51.0,female,34.2,1.0,no,southwest ,9872.701
+19.0,male,25.555,1.0,no,northwest ,2221.56445
+41.0,male,28.405,1.0,no,northwest ,6664.68595
+18.0,male,30.14,0.0,no,southeast ,1131.5066
+57.0,male,40.28,0.0,no,northeast,20709.02034
+43.0,female,20.045,2.0,yes,northeast,19798.05455
+43.0,male,25.52,5.0,no,southeast ,14478.33015
+18.0,female,31.92,0.0,no,northeast,2205.9808
+48.0,female,33.11,0.0,yes,southeast ,40974.1649
+28.0,female,27.5,2.0,no,southwest ,20177.67113
+54.0,female,31.9,3.0,no,southeast ,27322.73386
+22.0,male,35.6,0.0,yes,southwest ,35585.576
+62.0,male,32.015,0.0,yes,northeast,45710.20785
+39.0,male,26.41,0.0,yes,northeast,20149.3229
+29.0,male,22.895,0.0,yes,northeast,16138.76205
+52.0,female,46.75,5.0,no,southeast ,12592.5345
+64.0,female,31.3,2.0,yes,southwest ,47291.055
+24.0,female,39.49,0.0,no,southeast ,2480.9791
+42.0,female,29.0,1.0,no,southwest ,7050.642
+59.0,male,28.785,0.0,no,northwest ,12129.61415
+32.0,female,41.1,0.0,no,southwest ,3989.841
+36.0,female,22.6,2.0,yes,southwest ,18608.262
+47.0,female,26.6,2.0,no,northeast,9715.841
+19.0,female,28.3,0.0,yes,southwest ,17081.08
+52.0,female,31.2,0.0,no,southwest ,9625.92
+45.0,female,27.645,1.0,no,northwest ,28340.18885
+48.0,female,35.91,1.0,no,northeast,26392.26029
+27.0,female,30.4,3.0,no,northwest ,18804.7524
+54.0,male,32.775,0.0,no,northeast,10435.06525
+51.0,female,18.05,0.0,no,northwest ,9644.2525
+45.0,female,35.815,0.0,no,northwest ,7731.85785
+43.0,male,26.03,0.0,no,northeast,6837.3687
+19.0,female,28.9,0.0,no,southwest ,1743.214
+56.0,male,39.6,0.0,no,southwest ,10601.412
+23.0,male,26.51,0.0,no,southeast ,1815.8759
+55.0,female,26.98,0.0,no,northwest ,11082.5772
+49.0,male,35.86,0.0,no,southeast ,8124.4084
+43.0,female,24.7,2.0,yes,northwest ,21880.82
+57.0,male,33.63,1.0,no,northwest ,11945.1327
+31.0,male,20.4,0.0,no,southwest ,3260.199
+46.0,male,42.35,3.0,yes,southeast ,46151.1245
+45.0,female,30.9,2.0,no,southwest ,8520.026
+30.0,female,33.33,1.0,no,southeast ,4151.0287
+41.0,male,29.64,5.0,no,northeast,9222.4026
+26.0,female,40.185,0.0,no,northwest ,3201.24515
+61.0,female,31.16,0.0,no,northwest ,13429.0354
+18.0,male,15.96,0.0,no,northeast,1694.7964

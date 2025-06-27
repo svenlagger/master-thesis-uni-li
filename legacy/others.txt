@@ -1,0 +1,361 @@
+def correct_sr_inference(
+        dataset: pd.DataFrame, 
+        features: list, 
+        target: str, 
+        sr_prediction: pd.Series
+    ):
+
+    features_df = dataset[features]
+    residuals = dataset[target] - sr_prediction
+    residuals = residuals.reset_index(drop=True)
+
+    # Combine SR prediction as an additional feature
+    X = pd.concat([features_df, sr_prediction.rename("SR_pred")], axis=1)
+    y = residuals  # target: residuals computed from (actual - SR prediction)
+
+    # Split data for training and testing (if desired)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Create XGBoost DMatrix objects
+    dtrain = xgb.DMatrix(X_train, label=y_train)
+    dtest = xgb.DMatrix(X_test, label=y_test)
+
+    # Set up parameters for regression
+    params = {
+        'objective': 'reg:squarederror',
+        'eval_metric': 'rmse',
+        'eta': 0.1,
+        'max_depth': 6
+    }
+
+    num_rounds = 10000
+    model_xgb = xgb.train(params, dtrain, num_rounds)
+
+    # Evaluate on test set
+    y_pred_test = model_xgb.predict(dtest)
+    mse_test = mean_squared_error(y_test, y_pred_test)
+    print(f"XGBoost Residual Correction Test MSE: {mse_test:.4f}")
+
+    # For final predictions, use the full dataset:
+    dall = xgb.DMatrix(X)
+    predicted_residual_correction = model_xgb.predict(dall)
+
+    # Compute final prediction as the sum of the SR prediction and the predicted residual correction
+    final_prediction = sr_prediction + predicted_residual_correction
+
+    # Optionally, compute overall MSE against actual values
+    final_mse = mean_squared_error(dataset[target], final_prediction)
+    print(f"Final MSE after XGBoost residual correction: {final_mse:.4f}")
+
+    return final_prediction
+
+
+def anonymize_column_names(dataset: pd.DataFrame):
+    rename_map = {col: f"X{i+1}" for i, col in enumerate(dataset.columns)}
+    df_anonymized = dataset.rename(columns=rename_map)
+    return df_anonymized, rename_map
+
+
+def deanonymize_column_names(
+        dataset_anonymized: pd.DataFrame, 
+        rename_map: dict[str, str]
+    ):
+    reverse_map = {v: k for k, v in rename_map.items()}
+    df_original = dataset_anonymized.rename(columns=reverse_map)
+    return df_original
+
+
+def get_correlation_statements(correlation_matrix: pd.DataFrame):
+    corr_statements = []
+    corr_permutations = []
+
+    for column in correlation_matrix:
+        for i in range(len(correlation_matrix)):
+            current = correlation_matrix[column][i]
+            if current != 1 and np.abs(current) >= 0.2:
+                first_arg = column.split(' ')[0]
+                second_arg = (list(correlation_matrix.columns)[i]).split(' ')[0]
+                r = current.round(2)
+                corr_permutations.append([second_arg, first_arg, r])
+                if [first_arg, second_arg, r] not in corr_permutations:
+                    corr_statements.append(f"Columns {first_arg} and {second_arg} (r = {r})")
+    
+    return corr_statements
+
+
+# TODO add min-max values and handle discrete numeric columns
+def get_distribution_statements(distr_report: dict, dataset: pd.DataFrame):
+    discrete_columns = get_discrete_numerical_columns(dataset)
+    distr_statements = []
+    statement = None
+    for col in dataset:
+        if col in distr_report and distr_report[col] is not None:
+            result = distr_report[col]
+            col_min = round(dataset[col].min(), 3)
+            col_max = round(dataset[col].max(), 3)
+            col_details = result['parameters']
+            if col_details['name'] == 'norm':
+                statement = (f'Column \"{col}\": type = numerical, distribution = gaussian, loc = {round(col_details["params"][0], 3)}, scale = {round(col_details["params"][1], 3)}, range = {col_min} to {col_max}')
+                if col in discrete_columns: statement += ' (with only whole numbers allowed)'
+            elif col_details['name'] == 'lognorm':
+                statement = (f'Column \"{col}\": type = numerical, distribution = lognorm, s = {round(col_details["params"][0], 3)}, loc = {round(col_details["params"][1], 3)}, scale = {round(col_details["params"][2], 3)}, range = {col_min} to {col_max}')
+                if col in discrete_columns: statement += ' (with only whole numbers allowed)'
+            elif col_details['name'] == 'gamma':
+                statement = (f'Column \"{col}\": type = numerical, distribution = gamma, a = {round(col_details["params"][0], 3)}, loc = {round(col_details["params"][1], 3)}, scale = {round(col_details["params"][2], 3)}, range = {col_min} to {col_max}')
+                if col in discrete_columns: statement += ' (with only whole numbers allowed)'
+        else:
+            categories = json.dumps(dataset[col].unique().tolist())
+            statement = (f'Column \"{col}\": type = categorical, categories = {categories}')
+        distr_statements.append(statement)
+    return distr_statements
+
+
+def auto_preprocess_bn(
+        dataset: pd.DataFrame, 
+        bins: int = 5, 
+        discrete_threshold: int = 10
+    ):
+    df_processed = dataset.copy()
+    for col in df_processed.columns:
+        if pd.api.types.is_numeric_dtype(df_processed[col]):
+            # Heuristic: if float type or many unique values, then consider it continuous.
+            if df_processed[col].dtype in [np.float64, np.float32] or df_processed[col].nunique() > discrete_threshold:
+                try:
+                    # Use 'duplicates="drop"' to handle cases with non-unique bin edges.
+                    df_processed[col] = pd.qcut(df_processed[col], q=bins, labels=False, duplicates='drop')
+                except Exception as e:
+                    print(f"Error discretizing column {col}: {e}")
+        elif df_processed[col].dtype == 'object':
+            # Convert string columns to categorical type.
+            df_processed[col] = df_processed[col].astype('category')
+    return df_processed
+
+
+def get_bn_statements(model: (dict | list)):
+    bn_statements = []
+    try:
+        for edge in model['model_edges']:
+            bn_statements.append(f'{edge[0]} -> {edge[1]}')
+        return bn_statements
+    except KeyError:
+        return None
+
+
+def get_llm_generation_prompt(
+        dataset: pd.DataFrame, 
+        correlation_matrix: pd.DataFrame,
+        include_bn: bool = False, 
+        enforce_positive_nums: bool = False,
+        n_rows: int = None,
+        discrete_threshold: int = 10
+    ):
+    n_columns = len(dataset.columns)
+    if not n_rows:
+        n_rows = len(dataset)
+
+    prompt = f'Generate a table with {n_columns} columns and {n_rows} rows with the following properties:\n\n'
+
+    distributions = fit_distributions(dataset)
+    distribution_staements = get_distribution_statements(distributions, dataset)
+    for statement in distribution_staements:
+        prompt += statement + '\n'
+
+    prompt += '\nWith correlations:\n'
+
+    correlation_statements = get_correlation_statements(correlation_matrix)
+    for statement in correlation_statements:
+        prompt += statement + '\n'
+    
+    if include_bn:
+        prompt += '\nWith Bayesian Network structure:\n'
+        df_preprocessed = auto_preprocess_bn(dataset, discrete_threshold=discrete_threshold)
+        model = bn.structure_learning.fit(df_preprocessed, methodtype='hc', scoretype='bic', verbose=0)
+        bn_statements = get_bn_statements(model)
+        for statement in bn_statements:
+            prompt += statement + '\n'
+
+    prompt += '\n'
+
+    if enforce_positive_nums:
+        prompt += 'All numbers in the table must be positive. '
+
+    prompt += ('Re-check the data to ensure that all conditions are met before displaying. '
+               'Every condition must be met exactly. Do not output until exactly correct. '
+               'Provide the data in a downloadable Excel file.')
+
+    return prompt
+
+
+def generate_bn_generation_profile(df, categorical_cols, bn_edges, distfit_dict=None, bins=5, discrete_threshold=10):
+    """
+    Generates a generation profile from data and a Bayesian network structure.
+    
+    Parameters:
+        df (pd.DataFrame): The original dataset.
+        categorical_cols (list): List of column names that are categorical.
+        bn_edges (list of tuples): BN structure as (parent, child) edges.
+        distfit_dict (dict, optional): Dictionary with best-fitting distribution details
+            for numerical variables (e.g., output from distfit).
+        bins (int, optional): Number of bins to use when discretizing continuous parent columns.
+        discrete_threshold (int, optional): Threshold for unique values to consider a numeric column as continuous.
+    
+    Returns:
+        dict: Generation profile containing marginal and conditional parameters.
+    """
+    profile = {"variables": {}, "structure": bn_edges}
+    all_vars = list(df.columns)
+    
+    # Process unconditional/marginal profiles using original continuous data.
+    for col in all_vars:
+        if col in categorical_cols:
+            marginal = df[col].value_counts(normalize=True).to_dict()
+            levels = list(marginal.keys())
+            profile["variables"][col] = {
+                "type": "categorical",
+                "levels": levels,
+                "marginal": marginal
+            }
+        else:
+            col_min = round(df[col].min(), 3)
+            col_max = round(df[col].max(), 3)
+            if distfit_dict is not None and col in distfit_dict and distfit_dict[col] is not None:
+                col_details = distfit_dict[col]['parameters']
+                if col_details['name'] == 'norm':
+                    distribution_name = "Gaussian"
+                    parameters = {
+                        "mean": round(col_details["params"][0], 3),
+                        "deviation": round(col_details["params"][1], 3),
+                        "min": col_min,
+                        "max": col_max
+                    }
+                elif col_details['name'] == 'lognorm':
+                    distribution_name = "Lognormal"
+                    parameters = {
+                        "mean": round(np.log(col_details["params"][2]), 3),
+                        "deviation": round(col_details["params"][0], 3),
+                        "min": col_min,
+                        "max": col_max
+                    }
+                elif col_details['name'] == 'gamma':
+                    distribution_name = "Gamma"
+                    parameters = {
+                        "alpha": round(col_details["params"][0], 3),
+                        "theta": round(col_details["params"][2], 3),
+                        "min": col_min,
+                        "max": col_max
+                    }
+                else:
+                    distribution_name = col_details['name'].capitalize()
+                    parameters = {
+                        "params": [round(p, 3) for p in col_details["params"]],
+                        "min": col_min,
+                        "max": col_max
+                    }
+                profile["variables"][col] = {
+                    "type": "numerical",
+                    "distribution": distribution_name,
+                    "parameters": parameters
+                }
+            else:
+                mean_val = round(df[col].mean(), 3)
+                std_val = round(df[col].std(), 3)
+                profile["variables"][col] = {
+                    "type": "numerical",
+                    "distribution": "Gaussian",
+                    "parameters": {
+                        "mean": mean_val,
+                        "deviation": std_val,
+                        "min": col_min,
+                        "max": col_max
+                    }
+                }
+    
+    # Build mapping from each child to its parent(s) from the BN edges.
+    parent_dict = defaultdict(list)
+    for parent, child in bn_edges:
+        parent_dict[child].append(parent)
+    
+    # Compute conditional distributions.
+    for child, parents in parent_dict.items():
+        if child not in df.columns:
+            continue
+        
+        # Create a copy of df for grouping and bin the parent columns into intervals.
+        df_group = df.copy()
+        for parent in parents:
+            if parent not in categorical_cols and pd.api.types.is_numeric_dtype(df_group[parent]):
+                # If too many unique values, bin into quantile-based intervals.
+                if df_group[parent].nunique() > discrete_threshold or df_group[parent].dtype in [np.float64, np.float32]:
+                    try:
+                        # Compute bin edges based on quantiles.
+                        quantiles = np.linspace(0, 1, bins + 1)
+                        bin_edges = df_group[parent].quantile(quantiles).unique()
+                        bin_edges = np.sort(bin_edges)
+                        # Only bin if there is more than one unique edge.
+                        if len(bin_edges) > 1:
+                            # Use pd.cut with right=False for left-closed, right-open intervals.
+                            df_group[parent] = pd.cut(df_group[parent], bins=bin_edges, include_lowest=True, right=False)
+                        # Else leave the column as is.
+                    except Exception as e:
+                        print(f"Error discretizing column {parent}: {e}")
+        
+        grouped = df_group.groupby(parents)
+        cond_table = {}
+        
+        # Determine the unconditional distribution type of the child, if available.
+        if distfit_dict is not None and child in distfit_dict and distfit_dict[child] is not None:
+            child_dist = distfit_dict[child]['parameters']['name']
+        else:
+            child_dist = 'norm'
+            
+        for group_vals, group_df in grouped:
+            # For a single parent, group_vals is an Interval; for multiple parents, it's a tuple.
+            if not isinstance(group_vals, tuple):
+                config_key = f"{parents[0]}={group_vals}"
+            else:
+                config_key = ",".join([f"{p}={v}" for p, v in zip(parents, group_vals)])
+            
+            if child in categorical_cols:
+                cond_prob = group_df[child].value_counts(normalize=True).to_dict()
+                cond_table[config_key] = cond_prob
+            else:
+                n = group_df[child].shape[0]
+                base_deviation = 0.0 if n < 2 else group_df[child].std()
+                if child_dist == 'lognorm':
+                    valid = group_df[child] > 0
+                    if valid.sum() >= 2:
+                        log_vals = np.log(group_df[child][valid])
+                        cond_mean = log_vals.mean()
+                        cond_std = log_vals.std()
+                    else:
+                        cond_mean, cond_std = np.nan, np.nan
+                    cond_table[config_key] = {
+                        "mean": round(cond_mean, 3),
+                        "deviation": round(cond_std, 3)
+                    }
+                elif child_dist == 'gamma':
+                    m = group_df[child].mean()
+                    s = base_deviation
+                    if m > 0 and s != 0:
+                        shape = (m/s)**2
+                        scale = (s**2)/m
+                    else:
+                        shape, scale = 0.0, 0.0
+                    cond_table[config_key] = {
+                        "alpha": round(shape, 3),
+                        "theta": round(scale, 3)
+                    }
+                else:
+                    m = group_df[child].mean()
+                    s = base_deviation
+                    cond_table[config_key] = {
+                        "mean": round(m, 3),
+                        "deviation": round(s, 3)
+                    }
+        if child in profile["variables"]:
+            profile["variables"][child]["conditional"] = {
+                "parents": parents,
+                "table": cond_table
+            }
+    
+    return profile
